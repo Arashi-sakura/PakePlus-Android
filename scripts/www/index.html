@@ -2,233 +2,408 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#dcebfb">
-<title>创魔工具箱</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#F2F2F7">
+<title>刷新表</title>
 <style>
-:root{
-  --ink:#12304a; --dim:#4d6c8a; --muted:#4d6c8a;
-  --glass:rgba(255,255,255,.42); --glass-hi:rgba(255,255,255,.66);
-  --edge:rgba(255,255,255,.78); --line:rgba(60,120,185,.20);
-  --accent:#1d74c9; --accent-soft:rgba(47,143,224,.16);
-  --jade:#0f8a5a; --amber:#b57400; --alert:#d1343a;
-  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
-  --blur:blur(18px) saturate(145%);
-  --shadow:0 6px 24px rgba(40,100,170,.12), inset 0 1px 0 rgba(255,255,255,.65);
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-[hidden]{display:none !important}
-.hidden{display:none !important}
-html,body{margin:0}
-body{color:var(--ink);background:#d6e8fb;overflow-x:hidden;
-  font:15px/1.6 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
-.bg{position:fixed;inset:0;z-index:-1;
-  background:
-    radial-gradient(520px 420px at 8% 0%,rgba(255,255,255,.95),transparent 70%),
-    radial-gradient(560px 460px at 100% 20%,rgba(120,185,250,.55),transparent 70%),
-    radial-gradient(620px 520px at 0% 100%,rgba(150,205,255,.6),transparent 70%),
-    linear-gradient(165deg,#e6f2ff,#c8e0fa)}
+  :root{
+    --bg:#F2F2F7;
+    --panel:#FFFFFF;
+    --panel2:#F9F9FB;
+    --line:rgba(60,60,67,.11);
+    --ink:#1C1C1E;
+    --dim:#8E8E93;
+    --gold:#007AFF;
+    --gold-ink:#FFFFFF;
+    --jade:#34C759;
+    --amber:#FF9500;
+    --alert:#FF3B30;
+    --seg:#E5E5EA;
+    --mono:"SF Mono","Cascadia Mono","Consolas",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  [hidden]{display:none !important}
+  html,body{margin:0}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Helvetica Neue",sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:680px;margin:0 auto;padding:16px 14px 72px}
 
-/* 页面与底部导航 */
-.page{display:none}
-.page.on{display:block}
-.wrap{max-width:640px;margin:0 auto;
-  padding:calc(env(safe-area-inset-top,0px) + 20px) 14px calc(env(safe-area-inset-bottom,0px) + 100px)}
-.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-h1{font-size:22px;margin:0;font-weight:700;letter-spacing:.01em}
-.sub{margin:3px 0 0;color:var(--dim);font-size:13px}
-.ctl{display:flex;gap:8px;flex-wrap:wrap}
+  /* 顶部导航栏 */
+  .head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+  h1{font-size:22px;font-weight:700;margin:0;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+  .badge-mode{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;
+              background:rgba(0,122,255,.1);color:var(--gold)}
+  .badge-mode.team{background:rgba(52,199,89,.12);color:var(--jade)}
+  .ctl{display:flex;gap:6px;align-items:center}
 
-.dock{position:fixed;left:50%;transform:translateX(-50%);z-index:20;
-  bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;gap:4px;padding:5px;border-radius:999px;
-  background:rgba(255,255,255,.5);border:1px solid var(--edge);
-  -webkit-backdrop-filter:blur(22px) saturate(150%);backdrop-filter:blur(22px) saturate(150%);
-  box-shadow:0 8px 28px rgba(40,100,170,.18), inset 0 1px 0 rgba(255,255,255,.7)}
-.dock button{border:0;background:transparent;color:var(--dim);font:inherit;font-size:14px;font-weight:600;
-  padding:11px 20px;min-width:132px;border-radius:999px;cursor:pointer}
-.dock button.on{background:rgba(255,255,255,.92);color:var(--accent);box-shadow:0 2px 8px rgba(40,100,170,.16)}
+  /* 苹果风按钮 */
+  .btn{font:inherit;font-size:13px;font-weight:500;border-radius:10px;padding:6px 12px;border:0;
+       background:rgba(118,118,128,.12);color:var(--ink);cursor:pointer;transition:all .15s;
+       display:inline-flex;align-items:center;justify-content:center;gap:4px}
+  .btn:hover{background:rgba(118,118,128,.18)}
+  .btn:active{transform:scale(.96)}
+  .btn.primary{background:var(--gold);color:#fff;font-weight:600}
+  .btn.primary:hover{filter:brightness(1.05)}
+  .btn.jade{background:var(--jade);color:#fff;font-weight:600}
+  .btn.rec{background:rgba(0,122,255,.1);color:var(--gold);font-weight:600;border-radius:8px;padding:5px 10px}
+  .btn.rec:hover{background:rgba(0,122,255,.16)}
+  .btn.edit-t{background:rgba(118,118,128,.1);color:var(--dim);font-size:12px;padding:5px 9px;border-radius:8px}
+  .btn.edit-t:hover{color:var(--ink);background:rgba(118,118,128,.16)}
+  .btn.del{background:transparent;color:#C7C7CC;padding:4px 7px;font-size:17px;line-height:1}
+  .btn.del:hover{color:var(--alert)}
+  .btn.lp{font-size:11.5px;padding:4px 9px;border-radius:8px;background:rgba(118,118,128,.1);color:var(--dim)}
+  .btn.lp.on{background:rgba(52,199,89,.14);color:var(--jade);font-weight:600}
 
-/* 玻璃面板 */
-.panel,.board,.catadd,.banner{background:var(--glass);border:1px solid var(--edge);border-radius:18px;
-  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--shadow)}
-.panel{padding:14px;margin-bottom:12px}
-.panel h2{font-size:15px;margin:0 0 10px;color:var(--accent);font-weight:700}
+  /* 顶栏分段开关 + 添加按钮 */
+  .top-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .mode-tabs{display:flex;background:var(--seg);padding:2px;border-radius:10px;flex:0 0 auto}
+  .mode-tab{font:inherit;font-size:13px;padding:5px 14px;border-radius:8px;border:0;background:transparent;
+            color:var(--dim);cursor:pointer;font-weight:600;transition:all .18s}
+  .mode-tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+  .btn-add-main{flex:1;max-width:130px;height:32px;border-radius:10px;font-size:13px}
 
-/* 按钮（两个页面共用） */
-.btn,#pgSolver button,.btn-save,.btn-cancel,.dlg button{
-  font:inherit;font-size:14px;color:var(--ink);cursor:pointer;min-height:40px;padding:8px 15px;border-radius:12px;
-  background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.85);
-  box-shadow:0 1px 4px rgba(40,100,170,.10)}
-.btn:active,#pgSolver button:active,.btn-cancel:active,.dlg button:active{background:rgba(255,255,255,.85)}
-.btn.primary,#pgSolver button.primary,.btn-save,.dlg button.primary{
-  background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
-#pgSolver button.danger{color:var(--alert)}
-#pgSolver button.small{min-height:36px;padding:6px 12px;font-size:13px}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.btn.rec{color:var(--accent);border-color:rgba(47,143,224,.5)}
-.btn.del{background:transparent;border:0;box-shadow:none;color:var(--dim);min-height:36px;min-width:36px;padding:4px 8px;font-size:20px;line-height:1}
-.btn.lp{font-size:12px;min-height:30px;padding:2px 12px;border-radius:999px;flex:0 0 auto}
-.btn.lp.on{background:rgba(15,138,90,.14);border-color:rgba(15,138,90,.6);color:var(--jade);font-weight:600}
+  /* iOS Spotlight 智能快录输入栏 */
+  .smart-bar{display:flex;align-items:center;gap:6px;background:var(--panel);border-radius:12px;
+             padding:5px 6px 5px 12px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.04);
+             border:1px solid rgba(0,122,255,.15);transition:border-color .18s,box-shadow .18s}
+  .smart-bar:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(0,122,255,.12)}
+  .smart-ico{color:var(--gold);font-size:15px;flex:0 0 auto;user-select:none}
+  .smart-inp{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:13.5px;
+             color:var(--ink);padding:5px 0;outline:none}
+  .smart-inp::placeholder{color:#AEAEB2}
+  .smart-btn{flex:0 0 auto;border:0;background:var(--gold);color:#fff;font:600 12.5px inherit;
+             padding:6px 12px;border-radius:9px;cursor:pointer;transition:transform .12s}
+  .smart-btn:active{transform:scale(.95)}
 
-/* ========= 刷新表 ========= */
-.addbar .btn{width:100%;min-height:50px;font-size:16px;font-weight:600}
-.err{color:var(--alert);font-size:14px;margin:10px 0 0}
-.cat{border:1px solid var(--line);color:var(--dim);border-radius:999px;padding:0 9px;font-size:11px;flex:0 0 auto;background:rgba(255,255,255,.4)}
-.tabs{display:flex;gap:8px}
-#tabs{margin-top:14px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-#tabs::-webkit-scrollbar{display:none}
-.tab{flex:0 0 auto;font:inherit;font-size:14px;padding:8px 16px;border-radius:999px;white-space:nowrap;cursor:pointer;
-  border:1px solid rgba(255,255,255,.8);background:rgba(255,255,255,.38);color:var(--dim)}
-.tab.on,.tab.active{background:rgba(255,255,255,.9);color:var(--accent);font-weight:700;border-color:rgba(47,143,224,.45)}
-.tab.plus{font-weight:600}
-.catadd{margin-top:12px;padding:4px 14px 16px}
-.catadd .fld-label{margin:14px 0 8px}
-.catadd .sheet-btns{margin-top:16px}
-.banner{margin-top:14px;padding:10px 14px;font-size:14px;color:#8a1f23;
-  background:rgba(255,228,228,.6);border-color:rgba(209,52,58,.4)}
-.banner b{color:var(--alert)}
+  /* 智能解析确认卡片 */
+  .parse-box{background:var(--bg);border-radius:12px;padding:10px 12px;margin:8px 0 12px;text-align:left;font-size:13px}
+  .parse-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+  .parse-row + .parse-row{border-top:1px solid var(--line)}
+  .parse-k{color:var(--dim);font-size:12px}
+  .parse-v{font-weight:600;color:var(--ink)}
+  .parse-v.hl{color:var(--gold)}
+  .parse-isles{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:6px}
+  .parse-isle{border:0;background:#fff;color:var(--ink);border-radius:7px;padding:5px 0;font:600 12px inherit;cursor:pointer}
+  .parse-isle.on{background:var(--gold);color:#fff}
 
-.board{margin-top:14px;overflow:hidden}
-#list{list-style:none;margin:0;padding:0}
-.res{border-top:1px solid var(--line)}
-#list>li:first-child{border-top:0}
-.trunk{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:13px 14px;cursor:pointer;user-select:none}
-.trunk:active{background:rgba(255,255,255,.4)}
-.caret{color:var(--dim);font-size:11px;width:12px;flex:0 0 auto;transition:transform .15s;text-align:center}
-.res.open .caret{transform:rotate(90deg)}
-.res-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;min-width:0}
-.per{color:var(--dim);font-size:12px;flex:0 0 auto}
-.summary{margin-left:auto;font-size:12px;color:var(--dim);flex:0 1 auto;font-variant-numeric:tabular-nums;text-align:right}
-.summary.due,.summary.t-red{color:var(--alert);font-weight:600}
-.summary.t-yellow{color:var(--amber);font-weight:600}
-.summary.t-green{color:var(--jade);font-weight:600}
-.branches{margin-left:22px;border-left:1px solid var(--line);background:rgba(255,255,255,.18)}
-.isle-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:9px 14px 9px 12px;border-top:1px solid var(--line)}
-.isle-name{color:var(--dim);font-size:12px;min-width:36px;flex:0 0 auto}
-.isle-row .clock{font-family:var(--mono);font-size:20px;text-align:right;min-width:92px;flex:0 0 auto;
-  font-variant-numeric:tabular-nums;letter-spacing:.02em;color:var(--dim)}
-.isle-row .next{color:var(--dim);font-size:12px;flex:0 0 auto;font-variant-numeric:tabular-nums}
-.isle-row .rec-at{color:var(--dim);opacity:.75;font-size:12px;flex:0 0 auto}
-.isle-row .bar{flex:1 1 100%;height:4px;background:rgba(60,120,185,.14);border-radius:2px;overflow:hidden}
-.isle-row .bar i{display:block;height:100%;width:0;background:var(--jade);border-radius:2px;transition:width .5s linear}
-.isle-row .clear{visibility:hidden}
-.isle-row.has-rec .clear{visibility:visible}
-.isle-row.idle .bar{visibility:hidden}
-.isle-row.run{box-shadow:inset 3px 0 0 var(--jade)}
-.isle-row.run .clock{color:var(--jade);font-weight:600}
-.isle-row.run.t-yellow{box-shadow:inset 3px 0 0 var(--amber)}
-.isle-row.run.t-yellow .clock{color:var(--amber)}
-.isle-row.run.t-yellow .bar i{background:var(--amber)}
-.isle-row.run.t-red{box-shadow:inset 3px 0 0 var(--alert)}
-.isle-row.run.t-red .clock{color:var(--alert)}
-.isle-row.run.t-red .bar i{background:var(--alert)}
-.isle-row.due{box-shadow:inset 3px 0 0 var(--alert);background:linear-gradient(90deg,rgba(209,52,58,.12),transparent 70%)}
-.isle-row.due .clock{color:var(--alert);font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.06em;animation:flash 1.6s ease-in-out infinite}
-.isle-row.due .bar i{width:100%;background:var(--alert)}
-@keyframes flash{50%{opacity:.35}}
-@media (prefers-reduced-motion:reduce){.isle-row.due .clock{animation:none}}
-.empty{margin:0;padding:26px 16px;color:var(--dim);font-size:13px;text-align:center}
-.tips{margin:14px 2px 0;color:var(--dim);font-size:12px;line-height:1.8}
-@media (max-width:620px){
-  .summary{margin-left:0;flex-basis:100%;text-align:left}
-  .trunk{position:relative;padding-right:40px}
-  .trunk .del{position:absolute;right:8px;top:10px}
-  .isle-row .clock{margin-left:auto}
-}
+  /* 小队联机卡片 */
+  .team-card{margin-bottom:12px;background:var(--panel);border-radius:14px;padding:12px 14px;
+             box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .team-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .team-status{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600}
+  .dot{width:8px;height:8px;border-radius:50%;background:#C7C7CC;display:inline-block}
+  .dot.live{background:var(--jade);box-shadow:0 0 0 3px rgba(52,199,89,.2)}
+  .dot.wait{background:var(--amber)}
+  .team-actions{display:flex;gap:6px}
+  .team-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
+  @media(min-width:560px){.team-grid{grid-template-columns:1fr 1fr}}
+  .team-box{background:var(--bg);border-radius:10px;padding:9px 10px}
+  .squad-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .squad-list:empty{display:none}
+  .squad-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 10px;border-radius:999px;
+    background:var(--panel);border:1px solid rgba(128,128,128,.3);font-size:12px;cursor:pointer;color:inherit}
+  .squad-chip.on{background:rgba(52,199,89,.15);border-color:var(--jade);color:var(--jade);font-weight:600}
+  .squad-chip .sq-x{border:0;background:transparent;color:inherit;font-size:14px;line-height:1;padding:0 4px;cursor:pointer;opacity:.7}
+  .team-box h3{margin:0 0 6px;font-size:12px;color:var(--dim);font-weight:600}
+  .input-grp{display:flex;gap:6px;align-items:center}
+  .inp-sm{flex:1;min-width:0;border:0;border-radius:8px;padding:6px 10px;font:inherit;
+          font-size:13px;background:#fff;color:var(--ink);outline:none}
+  .sync-log{margin-top:5px;font-size:11px;color:var(--dim)}
 
-/* 添加物质整页表单 */
-.sheet{position:fixed;inset:0;z-index:50;overflow-y:auto;overscroll-behavior:contain;
-  background:rgba(222,238,253,.62);-webkit-backdrop-filter:blur(28px) saturate(150%);backdrop-filter:blur(28px) saturate(150%);
-  padding:calc(env(safe-area-inset-top,0px) + 20px) 16px calc(env(safe-area-inset-bottom,0px) + 40px)}
-.sheet-inner{max-width:560px;margin:0 auto}
-.sheet h2{font-size:24px;margin:2px 0 6px;font-weight:700}
-.fld-label{display:block;margin:20px 0 8px;font-size:17px;font-weight:700}
-.fld{width:100%;background:rgba(255,255,255,.7);border:1px solid rgba(60,120,185,.3);border-radius:12px;color:var(--ink);
-  font:inherit;font-size:17px;padding:10px 12px;min-height:50px}
-.fld::placeholder{color:#7f9bb5}
-select.fld{appearance:auto}
-input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-input[type=number]{-moz-appearance:textfield;appearance:textfield}
-.fld-row{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap}
-.fld.num{width:120px;flex:0 0 auto;text-align:center}
-.sheet .mini{color:var(--dim);font-size:16px;align-self:center;flex:0 0 auto}
-.radios{display:flex;gap:8px;flex-wrap:wrap}
-.radios label,.check.box{display:flex;align-items:center;gap:7px;border:1px solid rgba(60,120,185,.3);border-radius:12px;
-  padding:0 14px;font-size:16px;cursor:pointer;min-height:50px;background:rgba(255,255,255,.55)}
-.radios label:has(input:checked){border-color:var(--accent);background:rgba(255,255,255,.95)}
-.radios input,.check input{accent-color:var(--accent);width:19px;height:19px;margin:0}
-.check{display:flex;align-items:center;gap:9px;margin-top:12px;font-size:16px;cursor:pointer;user-select:none}
-.check.box{margin-top:0}
-.sheet-btns{display:flex;gap:10px;margin-top:26px}
-.btn-save,.btn-cancel{flex:1;font-size:17px;font-weight:600;min-height:54px;border-radius:14px}
+  .err{color:var(--alert);font-size:13px;margin:8px 0 0}
+  .cat{background:var(--bg);color:var(--dim);border-radius:6px;padding:2px 7px;font-size:11px;font-weight:500}
 
-/* 确认弹窗 */
-.dlg{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:24px;
-  background:rgba(20,50,80,.22);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
-.dlg-card{width:100%;max-width:340px;padding:20px;border-radius:20px;background:var(--glass-hi);border:1px solid var(--edge);
-  -webkit-backdrop-filter:blur(24px) saturate(150%);backdrop-filter:blur(24px) saturate(150%);box-shadow:0 12px 40px rgba(30,80,140,.25)}
-.dlg-card p{margin:0 0 18px;font-size:16px}
-.dlg-btns{display:flex;gap:10px}
-.dlg-btns button{flex:1;min-height:46px}
+  /* 分类胶囊栏 */
+  .tabs-wrap{margin-bottom:8px;display:flex;align-items:center}
+  .tabs{flex:1;display:flex;gap:6px;overflow-x:auto;padding:2px 0;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;font:inherit;font-size:13px;font-weight:500;padding:6px 13px;border-radius:999px;
+       border:0;background:var(--panel);color:var(--dim);cursor:pointer;white-space:nowrap;
+       display:inline-flex;align-items:center;gap:4px;box-shadow:0 1px 2px rgba(0,0,0,.03);transition:all .15s}
+  .tab.on{background:var(--ink);color:#fff;font-weight:600}
+  .tab.plus{color:var(--gold);background:rgba(0,122,255,.08);font-weight:600}
+  .tab.mgr{color:var(--dim);font-size:12px;background:transparent;box-shadow:none;padding:6px 8px}
+  .tab.mgr.active{color:var(--alert);font-weight:600}
+  .tab-del{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+           border-radius:50%;background:rgba(255,59,48,.15);color:var(--alert);font-size:11px;font-weight:700}
 
-/* ========= 星象求解 ========= */
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.board8{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
-.cell{aspect-ratio:1;min-width:0;border-radius:9px;display:flex;align-items:center;justify-content:center;
-  font-size:10px;font-weight:700;color:#10263a;cursor:pointer;user-select:none}
-.cell.off{background:transparent;border:1px dashed rgba(60,120,185,.28)}
-.cell.on{background:rgba(255,255,255,.6);border:1px solid rgba(47,143,224,.5)}
-.cell.X{background:var(--alert);color:#fff;cursor:default}
-.cell.filled{cursor:default;box-shadow:inset 0 1px 0 rgba(255,255,255,.55)}
-.mini4{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;width:136px;margin:8px 0}
-.mini4 .c{aspect-ratio:1;border-radius:8px;cursor:pointer;background:rgba(255,255,255,.6);border:1px solid rgba(47,143,224,.5)}
-.mini4 .c.on{background:var(--pickColor,#bd93f9);border-color:#fff}
-.colorPicker{display:flex;gap:8px;margin:4px 0}
-.swatch{width:32px;height:32px;border-radius:10px;cursor:pointer;border:2px solid transparent}
-.swatch.sel{border-color:#fff;box-shadow:0 0 0 2px var(--accent)}
-.pieceList{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.pieceCard{background:var(--glass-hi);border:1px solid var(--edge);border-radius:12px;padding:7px;width:78px;text-align:center;font-size:11px}
-.pieceCard .mini{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;width:48px;margin:0 auto 4px}
-.pieceCard .mini div{aspect-ratio:1;border-radius:2px}
-.pieceCard .mini div.off{background:transparent}
-.stat{display:flex;justify-content:space-around;text-align:center;margin:8px 0 12px}
-.stat div{font-size:12px;color:var(--dim)}
-.stat b{display:block;font-size:20px;color:var(--ink)}
-#planTabs{margin-bottom:10px;flex-wrap:wrap}
-#planTabs .tab{flex:1;text-align:center;padding:8px 6px}
-.legend .row{margin:3px 0;font-size:13px}
-.swatchS{width:14px;height:14px;border-radius:4px;flex-shrink:0}
-.note{font-size:12.5px;color:var(--dim);margin-top:8px;line-height:1.6}
-#log{font-size:12.5px;color:var(--dim);white-space:pre-wrap;line-height:1.6;margin-top:8px}
-#solveBtn{width:100%;min-height:50px;font-size:16px}
+  /* 二级小类栏 */
+  .subtabs-box{margin-bottom:10px;background:rgba(255,255,255,.7);backdrop-filter:blur(10px);
+               border-radius:12px;padding:8px 10px}
+  .subtabs-head{display:none}
+  .subtabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .subtab{font:inherit;font-size:12.5px;padding:4px 11px;border-radius:8px;border:0;
+          background:var(--panel);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:5px;
+          box-shadow:0 1px 2px rgba(0,0,0,.04);transition:all .15s}
+  .subtab.on{background:var(--gold);color:#fff;font-weight:600}
+  .subtab.plus{color:var(--gold);background:transparent;box-shadow:none;font-weight:600}
+  .subtab .cnt{font-size:11px;opacity:.65}
+  .subtab.on .cnt{opacity:.9;color:#fff}
+
+  /* 二级小类卡片网格 */
+  .sub-guide{padding:18px 12px;text-align:center}
+  .sub-guide-title{font-size:13px;color:var(--dim);margin:0 0 10px}
+  .sub-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media(min-width:560px){.sub-cards{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}}
+  .sub-card{position:relative;background:var(--panel);border:2px solid var(--gold);border-radius:18px;
+            padding:12px 6px 34px;cursor:pointer;transition:transform .12s;text-align:center;
+            display:flex;flex-direction:column;align-items:center;gap:4px;min-height:176px}
+  .sub-card:active{transform:scale(.97)}
+  .sc-img{width:62px;height:62px;border-radius:50%;overflow:hidden;background:var(--bg);display:flex;
+          align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--gold);
+          border:2px solid var(--line);flex:0 0 auto;margin-top:2px}
+  .sc-img img{width:100%;height:100%;object-fit:cover;display:block}
+  .sc-name{font-weight:600;font-size:14.5px;color:var(--ink);margin-top:4px;word-break:break-all;line-height:1.25}
+  .sc-range{font-size:11px;color:var(--dim)}
+  .sc-stat{font-size:12px;font-weight:700;line-height:1.35;word-break:break-all}
+  .sc-isle{font-size:11.5px;font-weight:600;color:var(--amber);background:var(--bg);border-radius:10px;padding:3px 12px;margin-top:2px}
+  .sc-x{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;border:0;background:var(--alert);
+        color:#fff;font-size:14px;line-height:1;padding:0;cursor:pointer}
+  .sc-add{position:absolute;left:6px;bottom:6px;width:24px;height:24px;border-radius:50%;border:2px solid var(--gold);
+          background:transparent;color:var(--gold);font-size:16px;line-height:1;padding:0;cursor:pointer}
+
+  .catadd{margin-bottom:10px;background:var(--panel);border-radius:14px;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  .catadd .fld-label{margin:0 0 6px;font-size:13px;color:var(--dim)}
+  .catadd .sheet-btns{margin-top:10px}
+
+  /* 苹果底部弹窗风格表单 */
+  .sheet{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);
+         display:flex;align-items:flex-end;justify-content:center;padding:0}
+  @media(min-width:560px){.sheet{align-items:center;padding:16px}}
+  .sheet-inner{width:100%;max-width:460px;background:var(--bg);border-radius:20px 20px 0 0;
+               padding:18px 16px 28px;max-height:90vh;overflow-y:auto;box-shadow:0 -8px 30px rgba(0,0,0,.12)}
+  @media(min-width:560px){.sheet-inner{border-radius:20px}}
+  .sheet h2{font-size:18px;margin:0 0 12px;font-weight:700;text-align:center}
+  .fld-label{display:block;margin:12px 0 6px;font-size:13px;font-weight:600;color:var(--dim)}
+  .fld{width:100%;background:var(--panel);border:0;border-radius:10px;color:var(--ink);
+       font:inherit;font-size:15px;padding:10px 12px;min-height:42px;outline:none}
+  .fld::placeholder{color:#C7C7CC}
+  select.fld{background:var(--panel);color:var(--ink);font-size:15px}
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input[type=number]{-moz-appearance:textfield;appearance:textfield}
+  .fld-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .fld.num{width:88px;flex:0 0 auto;text-align:center;font-weight:600}
+  .mini{color:var(--dim);font-size:13.5px;min-width:56px}
+  .radios{display:flex;background:var(--seg);padding:2px;border-radius:9px;gap:2px}
+  .radios label{display:flex;align-items:center;justify-content:center;border-radius:7px;
+                padding:0 11px;font-size:13px;cursor:pointer;min-height:34px;color:var(--dim);transition:all .15s}
+  .radios label:has(input:checked){background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+  .radios input{display:none}
+  .check{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;cursor:pointer;user-select:none}
+  .check input{accent-color:var(--gold);width:17px;height:17px;margin:0}
+  .check.box{background:var(--panel);border-radius:10px;padding:10px 12px;margin-top:12px}
+  .sheet-btns{display:flex;gap:8px;margin-top:18px}
+  .btn-save,.btn-cancel{flex:1;font:inherit;font-size:15px;font-weight:600;min-height:44px;
+                        border-radius:12px;cursor:pointer;border:0}
+  .btn-save{background:var(--gold);color:#fff}
+  .btn-cancel{background:rgba(118,118,128,.12);color:var(--ink)}
+
+  /* 居中模态框 (iOS Alert 风格) */
+  .modal-mask{position:fixed;inset:0;z-index:96;background:rgba(0,0,0,.32);
+              backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:16px}
+  .modal-card{background:rgba(255,255,255,.96);backdrop-filter:blur(20px);border-radius:18px;
+              width:100%;max-width:360px;padding:16px;box-shadow:0 12px 36px rgba(0,0,0,.16)}
+  .modal-title{font-size:16px;font-weight:700;margin:0 0 10px;text-align:center;color:var(--ink)}
+  .modal-sub{font-size:12px;color:var(--dim);margin:0 0 10px;text-align:center}
+  .hms-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+  .hms-cell{background:var(--bg);border-radius:10px;padding:6px;text-align:center}
+  .hms-cell span{display:block;font-size:11px;color:var(--dim);margin-bottom:3px}
+  .hms-cell input{width:100%;border:0;border-radius:7px;padding:6px 2px;
+                  font:600 18px var(--mono);text-align:center;color:var(--ink);background:#fff}
+  .quick-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;justify-content:center}
+  .chip{font:inherit;font-size:12px;padding:4px 9px;border-radius:7px;border:0;
+        background:var(--bg);color:var(--ink);cursor:pointer;font-weight:500}
+  .chip:active{background:var(--seg)}
+  .et-tabs{display:flex;background:var(--seg);padding:2px;border-radius:9px;margin:0 0 12px}
+  .et-tab{flex:1;font:inherit;font-size:12.5px;padding:5px 6px;border-radius:7px;border:0;background:transparent;color:var(--dim);cursor:pointer;font-weight:600}
+  .et-tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+  .et-preview{background:var(--bg);border-radius:9px;padding:8px 10px;font-size:12px;color:var(--ink);margin-bottom:10px;text-align:center}
+  .et-preview b{color:var(--gold)}
+
+  /* Toast */
+  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:110;
+         background:rgba(28,28,30,.88);backdrop-filter:blur(10px);color:#fff;padding:8px 16px;
+         border-radius:999px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.18);pointer-events:none}
+
+  /* 提醒横幅 */
+  .banner{margin-bottom:10px;background:rgba(255,59,48,.1);color:var(--alert);
+          border-radius:12px;padding:9px 12px;font-size:13px;font-weight:500}
+  .banner b{font-weight:700}
+
+  /* 主列表 (iOS Inset Grouped 风格) */
+  .board{background:var(--panel);border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  #list{list-style:none;margin:0;padding:0}
+  .res{border-top:1px solid var(--line)}
+  #list > li:first-child{border-top:0}
+
+  .trunk{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:12px 14px;cursor:pointer;user-select:none}
+  .trunk:active{background:var(--panel2)}
+  .caret{color:#C7C7CC;font-size:11px;width:12px;transition:transform .18s;text-align:center}
+  .res.open .caret{transform:rotate(90deg);color:var(--gold)}
+  .res-name{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .per{color:var(--dim);font-size:11.5px;background:var(--bg);padding:1px 6px;border-radius:5px}
+  .summary{margin-left:auto;font-size:12.5px;color:var(--dim);font-variant-numeric:tabular-nums;text-align:right}
+  .summary.due,.summary.t-red{color:var(--alert);font-weight:600}
+  .summary.t-yellow{color:var(--amber);font-weight:600}
+  .summary.t-green{color:var(--jade);font-weight:600}
+
+  .branches{background:var(--panel2);border-top:1px solid var(--line)}
+  .isle-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;position:relative;
+            padding:8px 14px;border-top:1px solid var(--line)}
+  .branches .isle-row:first-child{border-top:0}
+  .isle-name{color:var(--ink);font-weight:600;font-size:13px;min-width:34px}
+  .isle-phase{font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:5px;display:none}
+  .isle-row.run .isle-phase,.isle-row.win .isle-phase,.isle-row.due .isle-phase{display:inline-block}
+  .isle-row.run .isle-phase{background:rgba(52,199,89,.12);color:var(--jade)}
+  .isle-row.win .isle-phase{background:rgba(255,149,0,.14);color:var(--amber)}
+  .isle-row.due .isle-phase{background:rgba(255,59,48,.14);color:var(--alert)}
+  .isle-row .clock{font-family:var(--mono);font-size:17px;font-weight:600;text-align:right;min-width:76px;
+                   font-variant-numeric:tabular-nums;color:var(--dim);cursor:pointer;padding:1px 4px;border-radius:6px}
+  .isle-row .clock:hover{background:rgba(0,122,255,.08)}
+  .isle-row .next{color:var(--dim);font-size:11.5px;font-variant-numeric:tabular-nums}
+  .isle-row .rec-at{color:#AEAEB2;font-size:11px}
+  .isle-btns{margin-left:auto;display:flex;align-items:center;gap:5px}
+  .isle-row .bar{flex:1 1 100%;height:3px;background:rgba(60,60,67,.08);border-radius:2px;overflow:hidden;position:relative}
+  .isle-row .bar i{display:block;height:100%;width:0;background:var(--jade);border-radius:2px;transition:width .4s linear}
+  .isle-row .bar .win-mark{position:absolute;top:0;bottom:0;width:2px;background:rgba(0,0,0,.25);z-index:2}
+  .isle-row .clear{visibility:hidden}
+  .isle-row.has-rec .clear{visibility:visible}
+  .isle-row.idle .bar{display:none}
+
+  .isle-row.run .clock{color:var(--jade)}
+  .isle-row.run .bar i{background:var(--jade)}
+  .isle-row.win{background:rgba(255,149,0,.04)}
+  .isle-row.win .clock{color:var(--amber)}
+  .isle-row.win .bar i{background:var(--amber)}
+  .isle-row.run.t-yellow .clock{color:var(--amber)}
+  .isle-row.run.t-yellow .bar i{background:var(--amber)}
+  .isle-row.run.t-red .clock,.isle-row.win.t-red .clock{color:var(--alert)}
+  .isle-row.run.t-red .bar i,.isle-row.win.t-red .bar i{background:var(--alert)}
+  .isle-row.due{background:rgba(255,59,48,.05)}
+  .isle-row.due .clock{color:var(--alert);font-family:inherit;font-size:14px;font-weight:700;animation:flash 1.6s ease-in-out infinite}
+  .isle-row.due .bar i{width:100%;background:var(--alert)}
+  @keyframes flash{50%{opacity:.4}}
+
+  .empty{margin:0;padding:32px 16px;color:var(--dim);font-size:13.5px;text-align:center}
+
+  /* iOS 悬浮球与毛玻璃小窗 */
+  .fab-ball{position:fixed;right:14px;bottom:76px;z-index:90;width:48px;height:48px;border-radius:50%;
+            background:rgba(0,122,255,.92);backdrop-filter:blur(8px);color:#fff;
+            box-shadow:0 6px 20px rgba(0,122,255,.32);display:flex;flex-direction:column;align-items:center;
+            justify-content:center;cursor:pointer;user-select:none;touch-action:none;transition:transform .12s}
+  .fab-ball:active{transform:scale(.92)}
+  .fab-ball .fab-ico{font-size:17px;line-height:1}
+  .fab-ball .fab-txt{font-size:9.5px;font-weight:600;margin-top:1px}
+  .fab-ball.open{background:rgba(28,28,30,.9)}
+
+  .quick-float{position:fixed;right:14px;bottom:134px;z-index:91;width:296px;max-width:calc(100vw - 28px);
+               background:rgba(255,255,255,.95);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+               border:1px solid rgba(60,60,67,.08);border-radius:20px;
+               box-shadow:0 12px 36px rgba(0,0,0,.16);padding:12px;color:var(--ink);animation:qfPop .16s ease-out}
+  @keyframes qfPop{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  .qf-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .qf-title{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:5px}
+  .qf-actions{display:flex;align-items:center;gap:4px}
+  .qf-close{border:0;background:var(--bg);color:var(--dim);width:24px;height:24px;border-radius:50%;font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .qf-inp{width:100%;background:var(--bg);border:1px solid transparent;border-radius:10px;
+          color:var(--ink);font:inherit;font-size:13.5px;padding:8px 10px;margin-bottom:8px;outline:none;transition:all .15s}
+  .qf-inp:focus{border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(0,122,255,.12)}
+  .qf-inp::placeholder{color:#AEAEB2}
+  .qf-submit{width:100%;border:0;border-radius:11px;background:var(--gold);color:#fff;font:600 13.5px inherit;padding:9px;cursor:pointer}
+  .qf-submit:active{transform:scale(.98)}
+
+  @media (max-width:620px){
+    .summary{margin-left:0;flex-basis:100%;text-align:left;font-size:12px}
+    .trunk{position:relative;padding-right:36px}
+    .trunk .del{position:absolute;right:8px;top:10px}
+    .isle-btns{width:100%;justify-content:flex-end}
+  }
 </style>
 </head>
 <body>
-<div class="bg"></div>
-
-<!-- ========== 页面一：刷新表 ========== -->
-<div id="pgTimer" class="page on">
 <div class="wrap">
+
   <header class="head">
-    <div>
-      <h1>创魔刷新表</h1>
-      <p class="sub">每个物质一棵树，1岛~10岛 各记各的。</p>
-    </div>
+    <h1>
+      <span id="modeBadge" class="badge-mode">本地</span>
+    </h1>
     <div class="ctl">
-      <button id="soundBtn" class="btn" aria-pressed="true">提示音：开</button>
-      <button id="notifyBtn" class="btn">开启系统通知</button>
+      <button id="soundBtn" class="btn" aria-pressed="true" type="button">🔔 音效</button>
+      <button id="notifyBtn" class="btn" type="button">通知</button>
     </div>
   </header>
 
-  <section class="addbar">
-    <button id="addBtn" class="btn primary">＋ 添加物质</button>
+  <div class="top-bar">
+    <div class="mode-tabs">
+      <button id="tabModeLocal" class="mode-tab on" type="button">本地</button>
+      <button id="tabModeTeam" class="mode-tab" type="button">小队</button>
+    </div>
+    <span id="modeDescText" hidden></span>
+    <button id="addBtn" class="btn primary btn-add-main" type="button">＋ 添加</button>
+  </div>
+
+  <div class="smart-bar">
+    <span class="smart-ico">⚡</span>
+    <input id="topSmartInp" class="smart-inp" maxlength="50" placeholder="输入如：黑曜石宝箱 1岛 刚刚 / 前1分钟">
+    <button id="topSmartBtn" class="smart-btn" type="button">录入</button>
+  </div>
+
+  <section id="teamCard" class="team-card" hidden>
+    <div class="team-top">
+      <div class="team-status">
+        <i id="syncDot" class="dot"></i>
+        <span id="syncStatusText">未连接小队</span>
+      </div>
+      <div class="team-actions">
+        <button id="pullNowBtn" class="btn" type="button" hidden>拉取</button>
+        <button id="pushNowBtn" class="btn" type="button" hidden>推送</button>
+        <button id="leaveRoomBtn" class="btn" type="button" hidden>断开</button>
+      </div>
+    </div>
+
+    <div class="team-grid">
+      <div class="team-box">
+        <h3>小队暗号实时同步（可同时加入5个）</h3>
+        <div class="input-grp">
+          <input id="roomCodeInp" class="inp-sm" maxlength="24" placeholder="输入暗号...">
+          <button id="joinRoomBtn" class="btn primary" type="button">连接</button>
+          <button id="genRoomBtn" class="btn" type="button">随机</button>
+        </div>
+        <div class="squad-list" id="squadList"></div>
+        <div class="sync-log"><span id="lastSyncInfo">输入相同暗号即可同屏（最多同时加入5个小队）</span></div>
+      </div>
+    </div>
   </section>
 
-  <nav id="tabs" class="tabs" aria-label="分类标签"></nav>
+  <section id="codeCard" class="team-card">
+    <div class="team-box">
+      <h3>口令码分享 / 导入（本地计时器）</h3>
+      <div class="input-grp">
+        <button id="exportCodeBtn" class="btn" style="flex:0 0 auto" type="button">复制口令</button>
+        <input id="importCodeInp" class="inp-sm" placeholder="粘贴口令...">
+        <button id="importCodeBtn" class="btn jade" type="button">导入</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="tabs-wrap">
+    <nav id="tabs" class="tabs" aria-label="分类"></nav>
+  </div>
+
+  <div id="subTabsBox" class="subtabs-box" hidden>
+    <div class="subtabs-head"><span id="subTabsTitle"></span></div>
+    <div id="subTabs" class="subtabs"></div>
+  </div>
 
   <div id="catAdd" class="catadd" hidden>
-    <label class="fld-label" for="catName">新分类名字</label>
-    <input id="catName" class="fld" maxlength="10" placeholder="比如：矿石">
+    <label id="catAddLabel" class="fld-label" for="catName">新增分类</label>
+    <input id="catName" class="fld" maxlength="12" placeholder="输入名称">
     <p id="catErr" class="err" hidden></p>
     <div class="sheet-btns">
       <button id="catOk" class="btn-save" type="button">添加</button>
@@ -239,260 +414,501 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield}
   <div id="banner" class="banner" role="status" hidden></div>
 
   <section class="board">
+    <div id="subGuide" class="sub-guide" hidden></div>
     <ul id="list"></ul>
-    <p id="empty" class="empty">还没有物质。点上面「＋ 添加物质」；<br>加好后点它的名字展开，在捡到它的那个岛点「记录刷新」。</p>
+    <p id="empty" class="empty">暂无物质，点击右上角「＋ 添加」</p>
   </section>
 
-  <footer class="tips">每次点「记录刷新」，都会在刷新范围里随机抽一个具体时刻来倒计时，每个岛、每次都不一样；关掉再打开，抽到的时刻不变、接着算。<br>开着「循环」的岛：到点后自动记一次刷新、重新随机抽下一轮，你不上线时间轴也不会断。<br>顶上那排是分类筛选：「全部」里能看到所有物质；点「＋ 新分类」能自己加分类。列表按剩余时间自动排：该刷新了的在最上面，没记录的沉底部。</footer>
-</div>
 </div>
 
-<!-- ========== 页面二：星象求解 ========== -->
-<div id="pgSolver" class="page">
-<div class="wrap">
-  <header class="head">
-    <div>
-      <h1>星象嵌合求解器</h1>
-      <p class="sub">棋盘和方块库都可编辑，一键求解，自动给补块建议。</p>
-    </div>
-  </header>
-
-  <section class="panel">
-    <h2>① 棋盘（点格子切换启用/禁用）</h2>
-    <div class="board8" id="boardEdit"></div>
-    <div class="row" style="margin-top:10px">
-      <button class="small" id="resetDiamond">恢复默认菱形(40格)</button>
-      <button class="small" id="clearBoard">清空</button>
-      <button class="small" id="fillBoard">全部启用</button>
-    </div>
-  </section>
-
-  <section class="panel">
-    <h2>② 方块库（点4×4格子画形状，不能旋转/翻转）</h2>
-    <div class="colorPicker" id="colorPicker"></div>
-    <div class="mini4" id="pieceEdit"></div>
-    <div class="row">
-      <button class="small primary" id="addPiece">+ 添加到方块库</button>
-      <button class="small" id="clearMini">清空画板</button>
-    </div>
-    <div class="pieceList" id="pieceList"></div>
-  </section>
-
-  <section class="panel">
-    <button class="primary" id="solveBtn">开始求解</button>
-    <div id="log"></div>
-  </section>
-
-  <section class="panel hidden" id="resultSection">
-    <h2>③ 结果</h2>
-    <div class="tabs" id="planTabs"></div>
-    <div class="stat" id="stat"></div>
-    <div class="board8" id="boardResult"></div>
-    <div class="legend" id="legend" style="margin-top:12px"></div>
-  </section>
-</div>
-</div>
-
-<!-- 底部导航 -->
-<nav class="dock" aria-label="功能切换">
-  <button id="navTimer" class="on" type="button">刷新表</button>
-  <button id="navSolver" type="button">星象求解</button>
-</nav>
-
-<!-- 添加新物质：整页表单 -->
-<section id="sheet" class="sheet" hidden aria-label="添加新物质">
+<!-- 添加物质弹窗 -->
+<section id="sheet" class="sheet" hidden aria-label="添加物质">
   <div class="sheet-inner">
-    <h2>添加新物质</h2>
+    <h2>添加物质</h2>
 
-    <label class="fld-label" for="sName">物质名称</label>
-    <input id="sName" class="fld" maxlength="20" placeholder="比如：火龙">
-
-    <span class="fld-label">刷新时间</span>
-    <div class="fld-row" id="singleRow">
-      <input id="sTime" class="fld num" type="number" inputmode="decimal" min="0" value="30">
-      <div class="radios">
-        <label><input type="radio" name="unit" value="min" checked><span>分钟</span></label>
-        <label><input type="radio" name="unit" value="hour"><span>小时</span></label>
-        <label><input type="radio" name="unit" value="day"><span>天</span></label>
-      </div>
+    <span class="fld-label">分类与物品</span>
+    <div class="fld-row">
+      <select id="sCat" class="fld" style="flex:1"></select>
+      <select id="sSubCatSel" class="fld" style="flex:1"></select>
     </div>
+    <input id="sSubCatNew" class="fld" style="margin-top:8px" maxlength="16" placeholder="输入新物品名称" hidden>
 
-    <div id="rangeBox" hidden>
+    <label class="fld-label" for="sName">备注名称（选填）</label>
+    <input id="sName" class="fld" maxlength="20" placeholder="默认使用上方物品名">
+
+    <span class="fld-label">刷新周期</span>
+    <label class="check" style="margin:4px 0 8px"><input type="checkbox" id="sRange" checked><span>范围时段（如 2~6 小时内刷新）</span></label>
+
+    <div id="rangeBox">
       <div class="fld-row">
-        <span class="mini">最快</span>
-        <input id="sEarly" class="fld num" type="number" inputmode="decimal" min="0" value="1">
+        <span class="mini">最早</span>
+        <input id="sEarly" class="fld num" type="number" inputmode="decimal" min="0" value="2">
         <div class="radios">
-          <label><input type="radio" name="eunit" value="min"><span>分钟</span></label>
-          <label><input type="radio" name="eunit" value="hour" checked><span>小时</span></label>
+          <label><input type="radio" name="eunit" value="min"><span>分</span></label>
+          <label><input type="radio" name="eunit" value="hour" checked><span>时</span></label>
           <label><input type="radio" name="eunit" value="day"><span>天</span></label>
         </div>
       </div>
-      <div class="fld-row" style="margin-top:10px">
-        <span class="mini">最慢</span>
-        <input id="sLate" class="fld num" type="number" inputmode="decimal" min="0" value="2">
+      <div class="fld-row" style="margin-top:8px">
+        <span class="mini">最晚</span>
+        <input id="sLate" class="fld num" type="number" inputmode="decimal" min="0" value="6">
         <div class="radios">
-          <label><input type="radio" name="lunit" value="min"><span>分钟</span></label>
-          <label><input type="radio" name="lunit" value="hour" checked><span>小时</span></label>
+          <label><input type="radio" name="lunit" value="min"><span>分</span></label>
+          <label><input type="radio" name="lunit" value="hour" checked><span>时</span></label>
           <label><input type="radio" name="lunit" value="day"><span>天</span></label>
         </div>
       </div>
     </div>
 
-    <label class="check"><input type="checkbox" id="sRange"><span>时间范围（如 1~2小时）</span></label>
-
-    <div id="flucWrap">
-      <span class="fld-label">时间波动</span>
-      <div class="fld-row">
-        <label class="check box"><input type="checkbox" id="sFluc" checked><span>±</span></label>
-        <input id="sFlucVal" class="fld num" type="number" inputmode="decimal" min="0" value="10">
-        <div class="radios">
-          <label><input type="radio" name="funit" value="pct" checked><span>%</span></label>
-          <label><input type="radio" name="funit" value="min"><span>分钟</span></label>
-          <label><input type="radio" name="funit" value="hour"><span>小时</span></label>
-        </div>
+    <div class="fld-row" id="singleRow" hidden>
+      <span class="mini">固定</span>
+      <input id="sTime" class="fld num" type="number" inputmode="decimal" min="0" value="6">
+      <div class="radios">
+        <label><input type="radio" name="unit" value="min"><span>分</span></label>
+        <label><input type="radio" name="unit" value="hour" checked><span>时</span></label>
+        <label><input type="radio" name="unit" value="day"><span>天</span></label>
       </div>
     </div>
 
-    <span class="fld-label">分类</span>
-    <select id="sCat" class="fld">
-      <option>自定义</option>
-    </select>
-
-    <label class="check box" style="margin-top:20px"><input type="checkbox" id="sLoop"><span>自动循环（每个岛可以单独关）</span></label>
+    <label class="check box"><input type="checkbox" id="sLoop"><span>到点自动循环下一轮</span></label>
 
     <p id="addErr" class="err" hidden></p>
 
     <div class="sheet-btns">
-      <button id="saveBtn" class="btn-save">保存</button>
-      <button id="cancelBtn" class="btn-cancel">取消</button>
+      <button id="cancelBtn" class="btn-cancel" type="button">取消</button>
+      <button id="saveBtn" class="btn-save" type="button">保存</button>
     </div>
   </div>
 </section>
 
-<!-- 确认弹窗（代替系统 confirm/alert，安卓壳里更稳） -->
-<div id="dlg" class="dlg" hidden>
-  <div class="dlg-card">
-    <p id="dlgMsg"></p>
-    <div class="dlg-btns">
-      <button id="dlgNo" type="button">取消</button>
-      <button id="dlgOk" class="primary" type="button">确定</button>
+<section id="editTimeModal" class="modal-mask" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <h3 id="editTimeTitle" class="modal-title">修改时间</h3>
+
+    <div class="et-tabs">
+      <button id="etTabRemain" class="et-tab on" type="button">剩余时间</button>
+      <button id="etTabGot" class="et-tab" type="button">获取时间</button>
+    </div>
+
+    <div id="etPaneRemain">
+      <div class="hms-grid">
+        <div class="hms-cell">
+          <span>时</span>
+          <input id="etHour" type="number" min="0" max="999" value="0" inputmode="numeric">
+        </div>
+        <div class="hms-cell">
+          <span>分</span>
+          <input id="etMin" type="number" min="0" max="59" value="30" inputmode="numeric">
+        </div>
+        <div class="hms-cell">
+          <span>秒</span>
+          <input id="etSec" type="number" min="0" max="59" value="0" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="quick-chips" id="etRemainChips">
+        <button type="button" class="chip" data-adj="-300">-5分</button>
+        <button type="button" class="chip" data-adj="-60">-1分</button>
+        <button type="button" class="chip" data-adj="60">+1分</button>
+        <button type="button" class="chip" data-adj="300">+5分</button>
+        <button type="button" class="chip" data-set="900">15分</button>
+        <button type="button" class="chip" data-set="1800">30分</button>
+        <button type="button" class="chip" data-set="3600">1小时</button>
+      </div>
+    </div>
+
+    <div id="etPaneGot" hidden>
+      <div class="hms-grid">
+        <div class="hms-cell">
+          <span>日期</span>
+          <select id="gotDay" style="width:100%;border:0;border-radius:7px;padding:6px 2px;font:600 15px inherit;text-align:center;color:var(--ink);background:#fff;height:34px">
+            <option value="0">今天</option>
+            <option value="-1">昨天</option>
+          </select>
+        </div>
+        <div class="hms-cell">
+          <span>时</span>
+          <input id="gotHour" type="number" min="0" max="23" value="12" inputmode="numeric">
+        </div>
+        <div class="hms-cell">
+          <span>分</span>
+          <input id="gotMin" type="number" min="0" max="59" value="0" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="quick-chips" id="etGotChips">
+        <button type="button" class="chip" data-ago="0">刚刚</button>
+        <button type="button" class="chip" data-ago="5">5分前</button>
+        <button type="button" class="chip" data-ago="10">10分前</button>
+        <button type="button" class="chip" data-ago="30">半小时前</button>
+      </div>
+
+      <div id="etGotPreview" class="et-preview"></div>
+    </div>
+
+    <div class="sheet-btns" style="margin-top:8px">
+      <button id="etCancelBtn" class="btn-cancel" type="button" style="min-height:40px;font-size:14px">取消</button>
+      <button id="etSaveBtn" class="btn-save" type="button" style="min-height:40px;font-size:14px">确定</button>
     </div>
   </div>
+</section>
+
+<section id="confirmModal" class="modal-mask" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <h3 id="cfmTitle" class="modal-title">确认</h3>
+    <p id="cfmMsg" class="modal-sub" style="font-size:14px;color:var(--ink);margin:6px 0 14px"></p>
+    <div class="sheet-btns" style="margin-top:6px">
+      <button id="cfmCancelBtn" class="btn-cancel" type="button" style="min-height:40px;font-size:14px">取消</button>
+      <button id="cfmOkBtn" class="btn-save" type="button" style="min-height:40px;font-size:14px;background:var(--alert);box-shadow:none">删除</button>
+    </div>
+  </div>
+</section>
+
+<section id="smartConfirmModal" class="modal-mask" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <h3 class="modal-title">确认修改时间</h3>
+    <div class="parse-box">
+      <div class="parse-row">
+        <span class="parse-k">匹配物品</span>
+        <span id="scResName" class="parse-v hl">-</span>
+      </div>
+      <div class="parse-row">
+        <span class="parse-k">动作识别</span>
+        <span id="scTimeDesc" class="parse-v">-</span>
+      </div>
+      <div class="parse-row">
+        <span class="parse-k">预计下次刷新</span>
+        <span id="scNextDesc" class="parse-v" style="color:var(--jade)">-</span>
+      </div>
+      <div style="margin-top:6px">
+        <span class="parse-k">目标岛屿（可点选更改）</span>
+        <div id="scIslesGrid" class="parse-isles"></div>
+      </div>
+    </div>
+    <div class="sheet-btns" style="margin-top:8px">
+      <button id="scCancelBtn" class="btn-cancel" type="button" style="min-height:40px;font-size:14px">取消</button>
+      <button id="scOkBtn" class="btn-save" type="button" style="min-height:40px;font-size:14px">确认修改</button>
+    </div>
+  </div>
+</section>
+
+<div id="toast" class="toast" hidden></div>
+
+<!-- 悬浮球与极简快记输入窗 -->
+<div id="fabBall" class="fab-ball" role="button" tabindex="0" title="悬浮快记">
+  <span class="fab-ico">⏱</span>
+  <span class="fab-txt">快记</span>
 </div>
 
-<script>
-/* 通用弹窗 + 底部导航 */
-window.glassDialog = function(msg, onOk, single){
-  var d = document.getElementById("dlg"), no = document.getElementById("dlgNo"), ok = document.getElementById("dlgOk");
-  document.getElementById("dlgMsg").textContent = msg;
-  no.hidden = !!single;
-  d.hidden = false;
-  ok.onclick = function(){ d.hidden = true; if(onOk) onOk(); };
-  no.onclick = function(){ d.hidden = true; };
-};
-(function(){
-  var pages = {timer: "pgTimer", solver: "pgSolver"};
-  function show(name){
-    for(var k in pages){
-      document.getElementById(pages[k]).classList.toggle("on", k === name);
-      document.getElementById("nav" + k.charAt(0).toUpperCase() + k.slice(1)).classList.toggle("on", k === name);
-    }
-    window.scrollTo(0, 0);
-    try{ localStorage.setItem("czbox.page", name); }catch(e){}
-  }
-  document.getElementById("navTimer").onclick = function(){ show("timer"); };
-  document.getElementById("navSolver").onclick = function(){ show("solver"); };
-  try{ var p = localStorage.getItem("czbox.page"); if(p && pages[p]) show(p); }catch(e){}
-})();
-</script>
+<aside id="quickFloat" class="quick-float" hidden aria-label="快记小窗">
+  <div class="qf-head">
+    <div class="qf-title">
+      <span>快记</span>
+      <span id="qfModeTag" style="font-size:10px;font-weight:600;color:var(--gold);background:rgba(0,122,255,.1);padding:1px 6px;border-radius:99px">本地</span>
+    </div>
+    <div class="qf-actions">
+      <button id="qfCloseBtn" class="qf-close" type="button" aria-label="关闭">×</button>
+    </div>
+  </div>
+
+  <input id="qfSmartInp" class="qf-inp" maxlength="50" placeholder="如：黑曜石宝箱 2岛 前1分钟">
+  <div class="quick-chips" id="qfSmartEx" style="margin-bottom:8px;justify-content:flex-start">
+    <button type="button" class="chip" data-fill=" 刚刚">刚刚</button>
+    <button type="button" class="chip" data-fill=" 前1分钟">前1分</button>
+    <button type="button" class="chip" data-fill=" 前3分钟">前3分</button>
+    <button type="button" class="chip" data-fill=" 1岛">1岛</button>
+  </div>
+  <button id="qfSmartSubmit" class="qf-submit" type="button">解析并确认</button>
+</aside>
 
 <script>
-
 (function(){
 "use strict";
-var KEY2 = "czmf.timer.v2", KEY1 = "czmf.timer.v1";
+var KEY_LOCAL = "czmf.timer.local.v3";
+var KEY_TEAM  = "czmf.timer.team.v3";
+var KEY_MODE  = "czmf.timer.mode.v3";
+var KEY_SQUADS = "czmf.timer.squads.v4";
+var MAX_SQUADS = 5;
 var ISLES = 10;
-var DEFAULT_CATS = ["植物", "宝箱", "世界boos", "砖头"];
+var INITIAL_CATS = ["植物", "宝箱", "世界boos", "砖头", "矿石"];
+var INITIAL_SUBCATS = {
+  "宝箱": ["黑曜石宝箱", "水晶宝箱", "罕见宝箱", "金宝箱"],
+  "矿石": ["水晶矿", "黑曜石矿", "金矿", "银矿"],
+  "植物": ["龙血树", "星辰花", "罕见植物"],
+  "世界boos": ["暗黑霸王龙", "奇美拉", "骨龙"],
+  "砖头": ["远古砖头", "遗迹石块"]
+};
 var $ = function(s){ return document.querySelector(s); };
-var listEl = $("#list"), emptyEl = $("#empty"), bannerEl = $("#banner"),
+
+var listEl = $("#list"), emptyEl = $("#empty"), bannerEl = $("#banner"), subGuideEl = $("#subGuide"),
     soundBtn = $("#soundBtn"), notifyBtn = $("#notifyBtn"),
     sheetEl = $("#sheet"), addBtn = $("#addBtn"), addErr = $("#addErr"),
     sName = $("#sName"), sTime = $("#sTime"), sRange = $("#sRange"), rangeBox = $("#rangeBox"),
     singleRow = $("#singleRow"),
-    sEarly = $("#sEarly"), sLate = $("#sLate"), sFluc = $("#sFluc"),
-    sFlucVal = $("#sFlucVal"), sCat = $("#sCat"), sLoop = $("#sLoop"),
-    tabsEl = $("#tabs"), catAdd = $("#catAdd"),
+    sEarly = $("#sEarly"), sLate = $("#sLate"),
+    sCat = $("#sCat"), sSubCatSel = $("#sSubCatSel"), sSubCatNew = $("#sSubCatNew"),
+    sLoop = $("#sLoop"),
+    tabsEl = $("#tabs"), subTabsBox = $("#subTabsBox"), subTabsEl = $("#subTabs"),
+    catAdd = $("#catAdd"), catAddLabel = $("#catAddLabel"),
     catName = $("#catName"), catErr = $("#catErr");
 
-/* 物资 = {id, name, cat, kind, base, pct, amp, early, late, fluc, loop, loops, open, starts}
-   fluc：null 或 {mode:"pct"|"abs", val}，范围模式（kind:"range"）叠加的波动
-   loop：新物质默认是否循环；loops[i]：这个岛自己的循环开关（null = 跟随默认）
-   starts[i]：手动「记录刷新」的起点时刻（当前这一轮的起点）
-   每轮"具体多久刷"由起点随机抽出来（roundDur）；循环开着时一轮一轮往后推 */
-var resources = [];
-var customCats = [];       /* 自己加的分类标签 */
-var activeTab = "全部";    /* 当前选中的分类 */
+var currentMode = "local"; // "local" 或 "team"
+var localData = { resources: [], allCats: [], subCatsMap: {}, tab: "全部", subTab: "", subImgs: {} };
+var teamData  = { resources: [], allCats: [], subCatsMap: {}, tab: "全部", subTab: "", roomCode: "", updatedAt: Date.now(), subImgs: {} };
+
+var activeTab = "全部";
+var activeSubTab = "";
+var catManageMode = false;
+var catAddTarget = "cat";
 var soundOn = true;
-var rowState = {};         // "rid:岛序号" -> "idle" | "run" | "due"
-var loopCache = {};        // "rid:岛" -> {anchor, start, round} 当前轮起点缓存
-var lastRound = {};        // "rid:岛" -> 上次算到的轮号（用来发现"刚自动记了一轮"）
-var recentLoopAt = {};     // "rid:岛" -> 最近一次自动记的时间（横幅多显示 2 分钟）
+
+var rowState = {};
+var loopCache = {};
+var lastRound = {};
+var recentLoopAt = {};
 var booted = false;
 var lastBeepAt = 0;
 var titleTimer = null, titleTick = 0;
 var bannerText = "";
 var audioCtx = null;
 
-/* ---------- 存储 ---------- */
-function load(){
-  try{
-    var raw = localStorage.getItem(KEY2);
-    if(raw){
-      var data = JSON.parse(raw);
-      if(Array.isArray(data.resources)){
-        resources = data.resources.filter(function(r){ return r && r.id && r.name && Array.isArray(r.starts); });
-      }
-      if(Array.isArray(data.cats)){
-        customCats = data.cats.filter(function(c){
-          return typeof c === "string" && c.trim() && c !== "全部" && DEFAULT_CATS.indexOf(c) < 0;
-        }).filter(function(c, i, a){ return a.indexOf(c) === i; });
-      }
-      if(typeof data.tab === "string") activeTab = data.tab;
-      soundOn = data.sound !== false;
-    }else{
-      /* 旧版（v1）数据迁移：每条旧计时变成一棵树，规律保留，岛记录从零开始 */
-      var old = localStorage.getItem(KEY1);
-      if(old){
-        var d1 = JSON.parse(old);
-        if(Array.isArray(d1.items)){
-          resources = d1.items.filter(function(x){ return x && x.id && x.name; }).map(function(x){
-            return {
-              id: x.id, name: x.name,
-              kind: x.kind || "fixed", base: x.base || x.mins || 60,
-              pct: x.pct || 10, early: x.early || 60, late: x.late || 60,
-              loop: false, open: false, starts: new Array(ISLES).fill(null)
-            };
-          });
-        }
-        if(d1.sound === false) soundOn = false;
-      }
-    }
-    resources.forEach(function(r){
-      while(r.starts.length < ISLES) r.starts.push(null);
-      r.starts.length = ISLES;
-      if(!Array.isArray(r.loops)) r.loops = [];
-      while(r.loops.length < ISLES) r.loops.push(null);
-      r.loops.length = ISLES;
-      r.loop = (r.loop === true);
-    });
-  }catch(e){}
-  if(tabsList().indexOf(activeTab) < 0) activeTab = "全部";
-}
-function save(){
-  try{ localStorage.setItem(KEY2, JSON.stringify({sound: soundOn, resources: resources, cats: customCats, tab: activeTab})); }catch(e){}
+var clientId = "u_" + Math.random().toString(36).slice(2, 9);
+var squads = [];      // 已加入的小队 [{code, data}]，最多5个
+var activeSquad = ""; // 当前查看的小队暗号
+var conns = {};       // 每个小队各自的连接 {code: {es, bc, status, msg}}
+var syncDebounce = null;
+var warned = {};
+
+var qfSelectedIsle = 0;
+var qfSelectedResId = "";
+
+function showToast(msg){
+  var el = $("#toast");
+  el.textContent = msg;
+  el.hidden = false;
+  clearTimeout(window._toastT);
+  window._toastT = setTimeout(function(){ el.hidden = true; }, 2800);
 }
 
-/* ---------- 工具函数 ---------- */
+var cfmCallback = null;
+function askConfirm(title, msg, onOk){
+  $("#cfmTitle").textContent = title;
+  $("#cfmMsg").textContent = msg;
+  cfmCallback = onOk;
+  $("#confirmModal").hidden = false;
+}
+$("#cfmOkBtn").addEventListener("click", function(){
+  $("#confirmModal").hidden = true;
+  if(cfmCallback) cfmCallback();
+  cfmCallback = null;
+});
+$("#cfmCancelBtn").addEventListener("click", function(){
+  $("#confirmModal").hidden = true;
+  cfmCallback = null;
+});
+
+function cloneDefaultSubCats(){
+  var m = {};
+  for(var k in INITIAL_SUBCATS){
+    if(Object.prototype.hasOwnProperty.call(INITIAL_SUBCATS, k)){
+      m[k] = INITIAL_SUBCATS[k].slice();
+    }
+  }
+  return m;
+}
+
+function normalizeResources(arr){
+  if(!Array.isArray(arr)) return [];
+  return arr.filter(function(r){ return r && r.id && r.name && Array.isArray(r.starts); }).map(function(r){
+    while(r.starts.length < ISLES) r.starts.push(null);
+    r.starts.length = ISLES;
+    if(!Array.isArray(r.loops)) r.loops = [];
+    while(r.loops.length < ISLES) r.loops.push(null);
+    r.loops.length = ISLES;
+    if(!Array.isArray(r.customEnd)) r.customEnd = [];
+    while(r.customEnd.length < ISLES) r.customEnd.push(null);
+    r.customEnd.length = ISLES;
+    if(typeof r.subcat !== "string") r.subcat = "";
+    r.loop = (r.loop === true);
+    return r;
+  });
+}
+
+function ensureSubCatsRegistered(targetStore){
+  targetStore.allCats.forEach(function(c){
+    if(!Array.isArray(targetStore.subCatsMap[c])) targetStore.subCatsMap[c] = [];
+  });
+  targetStore.resources.forEach(function(r){
+    if(r.cat && r.cat !== "自定义" && r.subcat){
+      if(!Array.isArray(targetStore.subCatsMap[r.cat])) targetStore.subCatsMap[r.cat] = [];
+      if(targetStore.subCatsMap[r.cat].indexOf(r.subcat) < 0) targetStore.subCatsMap[r.cat].push(r.subcat);
+    }
+  });
+}
+
+function loadStore(key){
+  try{
+    var raw = localStorage.getItem(key);
+    if(raw){
+      var d = JSON.parse(raw);
+      var cats = INITIAL_CATS.slice();
+      if(Array.isArray(d.allCats)){
+        cats = d.allCats.filter(function(c){ return typeof c === "string" && c.trim() && c !== "全部"; });
+      }
+      var scMap = cloneDefaultSubCats();
+      if(d.subCatsMap && typeof d.subCatsMap === "object"){
+        for(var k in d.subCatsMap){
+          if(Array.isArray(d.subCatsMap[k])){
+            scMap[k] = d.subCatsMap[k].filter(function(s){ return typeof s === "string" && s.trim(); });
+          }
+        }
+      }
+      return {
+        resources: normalizeResources(d.resources),
+        allCats: cats,
+        subCatsMap: scMap,
+        tab: typeof d.tab === "string" ? d.tab : "全部",
+        subTab: typeof d.subTab === "string" ? d.subTab : "",
+        roomCode: typeof d.roomCode === "string" ? d.roomCode : "",
+        updatedAt: typeof d.updatedAt === "number" ? d.updatedAt : Date.now(),
+        subImgs: cleanImgs(d.subImgs)
+      };
+    }
+  }catch(e){}
+  return {
+    resources: [],
+    allCats: INITIAL_CATS.slice(),
+    subCatsMap: cloneDefaultSubCats(),
+    tab: "全部",
+    subTab: "",
+    roomCode: "",
+    updatedAt: Date.now(),
+    subImgs: {}
+  };
+}
+
+function cleanImgs(o){
+  var r = {};
+  if(o && typeof o === "object"){
+    for(var k in o){
+      if(Object.prototype.hasOwnProperty.call(o, k) && typeof o[k] === "string" &&
+         o[k].indexOf("data:image/") === 0 && o[k].length < 40000) r[k] = o[k];
+    }
+  }
+  return r;
+}
+function imgKey(cat, sub){ return cat + "/" + sub; }
+function curStore(){ return currentMode === "team" ? teamData : localData; }
+
+function normalizeStore(d){
+  d = d || {};
+  var cats = INITIAL_CATS.slice();
+  if(Array.isArray(d.allCats)){
+    cats = d.allCats.filter(function(c){ return typeof c === "string" && c.trim() && c !== "全部"; });
+  }
+  var scMap = cloneDefaultSubCats();
+  if(d.subCatsMap && typeof d.subCatsMap === "object"){
+    for(var k in d.subCatsMap){
+      if(Array.isArray(d.subCatsMap[k])){
+        scMap[k] = d.subCatsMap[k].filter(function(s){ return typeof s === "string" && s.trim(); });
+      }
+    }
+  }
+  return {
+    resources: normalizeResources(d.resources),
+    allCats: cats,
+    subCatsMap: scMap,
+    tab: typeof d.tab === "string" ? d.tab : "全部",
+    subTab: typeof d.subTab === "string" ? d.subTab : "",
+    roomCode: typeof d.roomCode === "string" ? d.roomCode : "",
+    updatedAt: typeof d.updatedAt === "number" ? d.updatedAt : Date.now(),
+    subImgs: cleanImgs(d.subImgs)
+  };
+}
+
+function squadByCode(code){
+  for(var i = 0; i < squads.length; i++){ if(squads[i].code === code) return squads[i]; }
+  return null;
+}
+
+function saveSquads(){
+  try{
+    localStorage.setItem(KEY_SQUADS, JSON.stringify({
+      active: activeSquad,
+      list: squads.map(function(q){ return {code: q.code, data: q.data}; })
+    }));
+  }catch(e){}
+}
+
+function loadAll(){
+  try{
+    var m = localStorage.getItem(KEY_MODE);
+    if(m === "team") currentMode = "team";
+    else currentMode = "local";
+  }catch(e){ currentMode = "local"; }
+
+  localData = loadStore(KEY_LOCAL);
+  teamData = loadStore(KEY_TEAM);
+
+  ensureSubCatsRegistered(localData);
+  ensureSubCatsRegistered(teamData);
+
+  squads = []; activeSquad = "";
+  var hasSquadKey = false;
+  try{
+    var rawSq = localStorage.getItem(KEY_SQUADS);
+    if(rawSq !== null){
+      hasSquadKey = true;
+      var sq = JSON.parse(rawSq);
+      if(sq && Array.isArray(sq.list)){
+        sq.list.forEach(function(q){
+          if(q && typeof q.code === "string" && q.code && squads.length < MAX_SQUADS && !squadByCode(q.code)){
+            var dd = normalizeStore(q.data);
+            dd.roomCode = q.code;
+            ensureSubCatsRegistered(dd);
+            squads.push({code: q.code, data: dd});
+          }
+        });
+        if(typeof sq.active === "string" && squadByCode(sq.active)) activeSquad = sq.active;
+      }
+    }
+  }catch(e){}
+  if(!hasSquadKey && teamData.roomCode){
+    squads.push({code: teamData.roomCode, data: teamData});
+    activeSquad = teamData.roomCode;
+  }
+  if(!activeSquad && squads.length) activeSquad = squads[0].code;
+  if(activeSquad) teamData = squadByCode(activeSquad).data;
+
+  var activeStore = currentMode === "team" ? teamData : localData;
+  activeTab = activeStore.tab;
+  activeSubTab = activeStore.subTab;
+  if(tabsList().indexOf(activeTab) < 0){
+    activeTab = "全部";
+    activeSubTab = "";
+  }
+}
+
+function saveActive(fromRemote){
+  try{ localStorage.setItem(KEY_MODE, currentMode); }catch(e){}
+  if(currentMode === "team"){
+    if(!fromRemote) teamData.updatedAt = Date.now();
+    teamData.tab = activeTab;
+    teamData.subTab = activeSubTab;
+    if(activeSquad){ saveSquads(); }
+    else{ try{ localStorage.setItem(KEY_TEAM, JSON.stringify(teamData)); }catch(e){} }
+    if(!fromRemote) broadcastChange();
+  }else{
+    localData.tab = activeTab;
+    localData.subTab = activeSubTab;
+    try{ localStorage.setItem(KEY_LOCAL, JSON.stringify(localData)); }catch(e){}
+  }
+}
+
+function currentResources(){ return currentMode === "team" ? teamData.resources : localData.resources; }
+function currentCats(){ return currentMode === "team" ? teamData.allCats : localData.allCats; }
+function currentSubCatsMap(){ return currentMode === "team" ? teamData.subCatsMap : localData.subCatsMap; }
+
 function p2(n){ return n < 10 ? "0" + n : "" + n; }
 function fmtRemain(ms){
   var s = Math.max(0, Math.ceil(ms / 1000));
@@ -522,6 +938,10 @@ function fmtWhen(ts){
   if(diff > 1 && diff < 7) return WD[d.getDay()] + " " + hm;
   return (d.getMonth() + 1) + "月" + d.getDate() + "日 " + hm;
 }
+function fmtHM(ts){
+  var d = new Date(ts);
+  return p2(d.getHours()) + ":" + p2(d.getMinutes());
+}
 function fmtShortClock(ts){
   var d = new Date(ts);
   var diff = dayDiff(ts);
@@ -532,99 +952,104 @@ function fmtShortClock(ts){
 }
 function fmtMins(mins){
   var h = Math.floor(mins / 60), m = mins % 60;
-  if(h && m) return h + " 小时 " + m + " 分";
-  if(h) return h + " 小时";
-  return m + " 分钟";
+  if(h && m) return h + "小时" + m + "分";
+  if(h) return h + "小时";
+  return m + "分钟";
 }
+
 function bounds(res){
   if(res.kind === "range"){
-    var e = res.early, l = res.late, f = res.fluc;
-    if(f && f.val > 0){
-      if(f.mode === "pct"){
-        var p = f.val / 100;
-        e = Math.round(e * (1 - p));
-        l = Math.round(l * (1 + p));
-      }else{
-        e = e - f.val;
-        l = l + f.val;
-      }
-    }
-    return [Math.max(1, e), Math.max(1, l)];
+    var e = res.early || 120, l = res.late || 360;
+    return [Math.max(1, e), Math.max(1, Math.max(e, l))];
   }
-  if(res.kind === "pct"){
-    var p = res.pct / 100;
-    return [Math.max(1, Math.round(res.base * (1 - p))), Math.max(1, Math.round(res.base * (1 + p)))];
-  }
-  if(res.kind === "abs"){
-    var a = res.amp || 0;
-    return [Math.max(1, res.base - a), res.base + a];
-  }
-  return [res.base, res.base];
+  var b = res.base || 360;
+  return [b, b];
 }
+
 function labelOf(res){
   var b = bounds(res);
-  if(res.kind === "range"){
-    var f = res.fluc;
-    if(f && f.val > 0){
-      return "每 " + fmtMins(res.early) + " ~ " + fmtMins(res.late) + " " +
-             (f.mode === "pct" ? "±" + f.val + "%" : "±" + fmtMins(f.val)) + " 随机刷";
-    }
-    return "每 " + fmtMins(b[0]) + " ~ " + fmtMins(b[1]) + " 之间随机刷";
+  if(b[0] < b[1]){
+    return fmtMins(b[0]) + "~" + fmtMins(b[1]);
   }
-  if(res.kind === "pct") return "每 " + fmtMins(res.base) + " ±" + res.pct + "%";
-  if(res.kind === "abs") return "每 " + fmtMins(res.base) + " ±" + fmtMins(res.amp);
-  return "每 " + fmtMins(res.base);
+  return fmtMins(b[1]);
 }
-function hash01(str){
-  var h = 2166136261;
-  for(var i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return ((h >>> 0) % 100000) / 100000;
-}
-/* 这一轮"具体多久刷"（分钟）：在「最快 ~ 最慢」范围里随机抽一个值。
-   同一轮的起点时刻永远抽到同一个值，所以页面关了再开、隔几天再算都不会变；
-   每次「记录刷新」起点不同，抽到的时间就不同 —— 这就是每次看到的随机 */
-function roundDur(res, key, startTs){
-  var b = bounds(res);
-  if(b[1] <= b[0]) return b[0];
-  return b[0] + Math.round((b[1] - b[0]) * hash01(key + ":" + startTs));
-}
+
 function effLoop(res, i){
   var v = res.loops ? res.loops[i] : null;
   return (v === true || v === false) ? v : res.loop === true;
 }
-/* 循环开着时：从记录的起点出发，一轮一轮推到"现在"这一轮 */
+
 function effectiveStart(res, i, now){
   var s0 = res.starts[i];
   if(!s0) return null;
-  var key = res.id + ":" + i;
-  if(!effLoop(res, i)) return {start: s0, round: 0, dur: roundDur(res, key, s0)};
-  var c = loopCache[key];
-  if(!c || c.anchor !== s0) c = loopCache[key] = {anchor: s0, start: s0, round: 0};
-  var guard = 0;
-  while(guard++ < 1000000){
-    var next = c.start + roundDur(res, key, c.start) * 60000;
-    if(next > now) break;
-    c.start = next; c.round++;
+  var b = bounds(res);
+  var earlyMs = b[0] * 60000;
+  var lateMs  = b[1] * 60000;
+  var hasWin  = (b[1] > b[0]);
+  var cEnd = (res.customEnd && res.customEnd[i]) ? res.customEnd[i] : null;
+
+  if(!effLoop(res, i)){
+    if(cEnd){
+      var customDur = Math.max(1000, cEnd - s0);
+      return {start: s0, winStart: cEnd, end: cEnd, durMs: customDur, earlyRatio: 1, hasWin: false, round: 0, edited: true};
+    }
+    return {
+      start: s0,
+      winStart: s0 + earlyMs,
+      end: s0 + lateMs,
+      durMs: lateMs,
+      earlyRatio: lateMs > 0 ? (earlyMs / lateMs) : 1,
+      hasWin: hasWin,
+      round: 0,
+      edited: false
+    };
   }
-  return {start: c.start, round: c.round, dur: roundDur(res, key, c.start)};
+
+  var curStart = s0;
+  var round = 0;
+  if(cEnd && now < cEnd){
+    var cDur = Math.max(1000, cEnd - s0);
+    return {start: s0, winStart: cEnd, end: cEnd, durMs: cDur, earlyRatio: 1, hasWin: false, round: 0, edited: true};
+  }
+  if(cEnd && now >= cEnd){
+    curStart = cEnd;
+    round = 1;
+  }
+  if(lateMs > 0 && now >= curStart + lateMs){
+    var jump = Math.floor((now - curStart) / lateMs);
+    curStart += jump * lateMs;
+    round += jump;
+  }
+  return {
+    start: curStart,
+    winStart: curStart + earlyMs,
+    end: curStart + lateMs,
+    durMs: lateMs,
+    earlyRatio: lateMs > 0 ? (earlyMs / lateMs) : 1,
+    hasWin: hasWin,
+    round: round,
+    edited: false
+  };
 }
-/* 抽中的刷出时刻之前 = 计时中；到点之后 = 该刷新了 */
+
 function isleStateAt(eff, now){
-  return now < eff.start + eff.dur * 60000 ? "run" : "due";
+  if(now >= eff.end) return "due";
+  if(eff.hasWin && now >= eff.winStart) return "win";
+  return "run";
 }
-/* 剩余时间档位：>=60分钟 绿；10~59分钟 黄；<10分钟 红 */
+
 function toneOf(remMs){
   if(remMs >= 3600000) return "green";
   if(remMs >= 600000) return "yellow";
   return "red";
 }
+
 function esc(s){
-  return s.replace(/[&<>"]/g, function(c){
+  return String(s).replace(/[&<>"]/g, function(c){
     return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];
   });
 }
 
-/* ---------- 提示音 ---------- */
 function unlockAudio(){
   if(!soundOn) return;
   try{
@@ -632,6 +1057,7 @@ function unlockAudio(){
     if(audioCtx.state === "suspended") audioCtx.resume();
   }catch(e){}
 }
+
 function beep(){
   if(!soundOn) return;
   try{
@@ -651,7 +1077,6 @@ function beep(){
   }catch(e){}
 }
 
-/* ---------- 系统通知 ---------- */
 function notify(title, body){
   try{
     if(("Notification" in window) && Notification.permission === "granted"){
@@ -659,17 +1084,14 @@ function notify(title, body){
     }
   }catch(e){}
 }
+
 function updateNotifyBtn(){
   if(!("Notification" in window)){
-    notifyBtn.textContent = "系统通知不可用";
-    notifyBtn.disabled = true;
+    notifyBtn.hidden = true;
     return;
   }
   var p = Notification.permission;
-  notifyBtn.textContent = p === "granted" ? "系统通知：已开"
-                        : p === "denied"  ? "系统通知：被拒绝"
-                        : "开启系统通知";
-  notifyBtn.title = p === "denied" ? "浏览器拒绝了通知权限；本地文件打开时较常见" : "";
+  notifyBtn.textContent = p === "granted" ? "通知:开" : "通知";
 }
 notifyBtn.addEventListener("click", function(){
   if(!("Notification" in window)) return;
@@ -678,18 +1100,1444 @@ notifyBtn.addEventListener("click", function(){
   }catch(e){ updateNotifyBtn(); }
 });
 
-/* ---------- 音效开关 ---------- */
 function updateSoundBtn(){
-  soundBtn.textContent = "提示音：" + (soundOn ? "开" : "关");
+  soundBtn.textContent = soundOn ? "🔔 音效" : "🔕 静音";
   soundBtn.setAttribute("aria-pressed", String(soundOn));
 }
 soundBtn.addEventListener("click", function(){
   soundOn = !soundOn;
-  updateSoundBtn(); save();
+  updateSoundBtn(); saveActive(true);
   if(soundOn) unlockAudio();
 });
 
-/* ---------- 添加表单开合 ---------- */
+function tabsList(){
+  return ["全部"].concat(currentCats());
+}
+
+function subCatsOf(cat){
+  if(!cat || cat === "全部" || cat === "自定义") return [];
+  var map = currentSubCatsMap();
+  var list = Array.isArray(map[cat]) ? map[cat].slice() : [];
+  currentResources().forEach(function(r){
+    if(r.cat === cat && r.subcat && list.indexOf(r.subcat) < 0){
+      list.push(r.subcat);
+    }
+  });
+  return list;
+}
+
+function renderTabs(){
+  tabsEl.innerHTML = "";
+  tabsList().forEach(function(name){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "tab" + (name === activeTab ? " on" : "");
+    var span = document.createElement("span");
+    span.textContent = name;
+    b.appendChild(span);
+
+    if(name !== "全部" && catManageMode){
+      var delIcon = document.createElement("span");
+      delIcon.className = "tab-del";
+      delIcon.textContent = "×";
+      delIcon.title = "删除分类「" + name + "」";
+      delIcon.addEventListener("click", function(e){
+        e.stopPropagation();
+        deleteCategory(name);
+      });
+      b.appendChild(delIcon);
+    }
+
+    b.addEventListener("click", function(){
+      if(catManageMode && name !== "全部"){
+        deleteCategory(name);
+      }else{
+        switchTab(name);
+      }
+    });
+    tabsEl.appendChild(b);
+  });
+
+  var plus = document.createElement("button");
+  plus.type = "button";
+  plus.className = "tab plus";
+  plus.textContent = "＋ 分类";
+  plus.addEventListener("click", function(){ openCatAdd("cat"); });
+  tabsEl.appendChild(plus);
+
+  var cats = currentCats();
+  if(cats.length > 0){
+    var mgr = document.createElement("button");
+    mgr.type = "button";
+    mgr.className = "tab mgr" + (catManageMode ? " active" : "");
+    mgr.textContent = catManageMode ? "完成" : "编辑";
+    mgr.addEventListener("click", function(){
+      catManageMode = !catManageMode;
+      renderTabs();
+      renderSubTabs();
+    });
+    tabsEl.appendChild(mgr);
+  }
+  renderSubTabs();
+}
+
+function renderSubTabs(){
+  if(activeTab === "全部"){
+    subTabsBox.hidden = true;
+    return;
+  }
+  subTabsBox.hidden = false;
+  var subs = subCatsOf(activeTab);
+  var resourcesList = currentResources();
+  var uncatCount = resourcesList.filter(function(r){ return r.cat === activeTab && !r.subcat; }).length;
+
+  subTabsEl.innerHTML = "";
+
+  subs.forEach(function(sc){
+    var cnt = resourcesList.filter(function(r){ return r.cat === activeTab && r.subcat === sc; }).length;
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "subtab" + (activeSubTab === sc ? " on" : "");
+    var sp = document.createElement("span");
+    sp.textContent = sc;
+    b.appendChild(sp);
+
+    var badge = document.createElement("span");
+    badge.className = "cnt";
+    badge.textContent = cnt;
+    b.appendChild(badge);
+
+    if(catManageMode){
+      var delIcon = document.createElement("span");
+      delIcon.className = "tab-del";
+      delIcon.textContent = "×";
+      delIcon.addEventListener("click", function(e){
+        e.stopPropagation();
+        deleteSubCategory(activeTab, sc);
+      });
+      b.appendChild(delIcon);
+    }
+
+    b.addEventListener("click", function(){
+      if(catManageMode){
+        deleteSubCategory(activeTab, sc);
+      }else{
+        activeSubTab = (activeSubTab === sc) ? "" : sc;
+        saveActive(true);
+        renderSubTabs();
+        render();
+      }
+    });
+    subTabsEl.appendChild(b);
+  });
+
+  if(uncatCount > 0){
+    var bOther = document.createElement("button");
+    bOther.type = "button";
+    bOther.className = "subtab" + (activeSubTab === "__NONE__" ? " on" : "");
+    bOther.innerHTML = '<span>未分小类</span><span class="cnt">' + uncatCount + '</span>';
+    bOther.addEventListener("click", function(){
+      activeSubTab = (activeSubTab === "__NONE__") ? "" : "__NONE__";
+      saveActive(true);
+      renderSubTabs();
+      render();
+    });
+    subTabsEl.appendChild(bOther);
+  }
+
+  var totalInCat = resourcesList.filter(function(r){ return r.cat === activeTab; }).length;
+  if(totalInCat > 0 && subs.length > 0){
+    var bAll = document.createElement("button");
+    bAll.type = "button";
+    bAll.className = "subtab" + (activeSubTab === "__ALL__" ? " on" : "");
+    bAll.innerHTML = '<span>全部' + esc(activeTab) + '</span><span class="cnt">' + totalInCat + '</span>';
+    bAll.addEventListener("click", function(){
+      activeSubTab = (activeSubTab === "__ALL__") ? "" : "__ALL__";
+      saveActive(true);
+      renderSubTabs();
+      render();
+    });
+    subTabsEl.appendChild(bAll);
+  }
+
+  var plusSub = document.createElement("button");
+  plusSub.type = "button";
+  plusSub.className = "subtab plus";
+  plusSub.textContent = "＋ 小类";
+  plusSub.addEventListener("click", function(){ openCatAdd("subcat"); });
+  subTabsEl.appendChild(plusSub);
+}
+
+function deleteCategory(name){
+  var resourcesList = currentResources();
+  var count = resourcesList.filter(function(r){ return r.cat === name; }).length;
+  askConfirm("删除分类", "确定删除大分类「" + name + "」吗？其中的 " + count + " 个物质会自动变为“不分类”。", function(){
+    if(currentMode === "team"){
+      teamData.allCats = teamData.allCats.filter(function(c){ return c !== name; });
+      delete teamData.subCatsMap[name];
+    }else{
+      localData.allCats = localData.allCats.filter(function(c){ return c !== name; });
+      delete localData.subCatsMap[name];
+    }
+    resourcesList.forEach(function(r){
+      if(r.cat === name){ r.cat = "自定义"; r.subcat = ""; }
+    });
+    if(activeTab === name){ activeTab = "全部"; activeSubTab = ""; }
+    if(currentCats().length === 0) catManageMode = false;
+    saveActive();
+    renderTabs();
+    render();
+    showToast("已删除分类「" + name + "」");
+  });
+}
+
+function deleteSubCategory(cat, subName){
+  var resourcesList = currentResources();
+  var count = resourcesList.filter(function(r){ return r.cat === cat && r.subcat === subName; }).length;
+  askConfirm("删除小类", "确定删除小类「" + subName + "」吗？里面的 " + count + " 个物质会保留在未分小类中。", function(){
+    var map = currentSubCatsMap();
+    if(Array.isArray(map[cat])){
+      map[cat] = map[cat].filter(function(s){ return s !== subName; });
+    }
+    resourcesList.forEach(function(r){
+      if(r.cat === cat && r.subcat === subName) r.subcat = "";
+    });
+    if(activeSubTab === subName) activeSubTab = "";
+    var st0 = curStore();
+    if(st0.subImgs) delete st0.subImgs[imgKey(cat, subName)];
+    saveActive();
+    renderSubTabs();
+    render();
+    showToast("已删除小类「" + subName + "」");
+  });
+}
+
+function switchTab(name){
+  if(activeTab === name){
+    if(name !== "全部" && activeSubTab !== ""){
+      activeSubTab = "";
+      saveActive(true);
+      renderSubTabs();
+      render();
+    }
+    return;
+  }
+  activeTab = name;
+  activeSubTab = "";
+  closeCatAdd();
+  saveActive(true);
+  renderTabs();
+  render();
+}
+
+function openCatAdd(mode){
+  catAddTarget = (mode === "subcat" && activeTab !== "全部") ? "subcat" : "cat";
+  catManageMode = false;
+  renderTabs();
+  catAdd.hidden = false;
+  if(catAddTarget === "subcat"){
+    catAddLabel.textContent = "在「" + activeTab + "」下新增小类";
+    catName.placeholder = "比如：黑曜石宝箱";
+  }else{
+    catAddLabel.textContent = "新增大分类名称";
+    catName.placeholder = "比如：矿石、精英怪";
+  }
+  catName.value = "";
+  catErr.hidden = true;
+  catName.focus();
+}
+
+function closeCatAdd(){
+  catAdd.hidden = true;
+}
+
+function addCat(){
+  var name = catName.value.trim();
+  if(!name){ catErr.textContent = "先起个名字"; catErr.hidden = false; catName.focus(); return; }
+  if(catAddTarget === "subcat" && activeTab !== "全部"){
+    var subs = subCatsOf(activeTab);
+    if(subs.indexOf(name) >= 0){
+      catErr.textContent = "已经有「" + name + "」小类了";
+      catErr.hidden = false; catName.focus(); return;
+    }
+    var map = currentSubCatsMap();
+    if(!Array.isArray(map[activeTab])) map[activeTab] = [];
+    map[activeTab].push(name);
+    activeSubTab = name;
+    saveActive();
+    renderSubTabs();
+    render();
+    closeCatAdd();
+    showToast("已添加小类「" + name + "」");
+    return;
+  }
+  if(tabsList().indexOf(name) >= 0){
+    catErr.textContent = "已经有「" + name + "」分类了"; catErr.hidden = false; catName.focus(); return;
+  }
+  if(currentMode === "team"){
+    teamData.allCats.push(name);
+    if(!Array.isArray(teamData.subCatsMap[name])) teamData.subCatsMap[name] = [];
+  }else{
+    localData.allCats.push(name);
+    if(!Array.isArray(localData.subCatsMap[name])) localData.subCatsMap[name] = [];
+  }
+  activeTab = name;
+  activeSubTab = "";
+  saveActive();
+  renderTabs();
+  render();
+  closeCatAdd();
+  showToast("已添加大分类「" + name + "」");
+}
+
+$("#catOk").addEventListener("click", addCat);
+$("#catCancel").addEventListener("click", closeCatAdd);
+catName.addEventListener("keydown", function(e){
+  if(e.key === "Enter"){ e.preventDefault(); addCat(); }
+  if(e.key === "Escape") closeCatAdd();
+});
+
+function fillCatSelect(){
+  sCat.innerHTML = "";
+  var none = document.createElement("option");
+  none.value = "自定义";
+  none.textContent = "不分类";
+  sCat.appendChild(none);
+  currentCats().forEach(function(name){
+    var o = document.createElement("option");
+    o.value = name;
+    o.textContent = name;
+    sCat.appendChild(o);
+  });
+  if(activeTab !== "全部" && currentCats().indexOf(activeTab) >= 0){
+    sCat.value = activeTab;
+  }
+  fillSubCatSelect();
+}
+
+function fillSubCatSelect(){
+  var cat = sCat.value;
+  sSubCatSel.innerHTML = "";
+  if(!cat || cat === "自定义"){
+    var o0 = document.createElement("option");
+    o0.value = "";
+    o0.textContent = "无小类";
+    sSubCatSel.appendChild(o0);
+    sSubCatNew.hidden = true;
+    syncNamePlaceholder();
+    return;
+  }
+  var subs = subCatsOf(cat);
+  subs.forEach(function(sc){
+    var o = document.createElement("option");
+    o.value = sc;
+    o.textContent = sc;
+    sSubCatSel.appendChild(o);
+  });
+  var oNone = document.createElement("option");
+  oNone.value = "";
+  oNone.textContent = "不设小类";
+  sSubCatSel.appendChild(oNone);
+  var oNew = document.createElement("option");
+  oNew.value = "__NEW__";
+  oNew.textContent = "＋ 新建小类...";
+  sSubCatSel.appendChild(oNew);
+
+  if(activeTab === cat && activeSubTab && activeSubTab !== "__ALL__" && activeSubTab !== "__NONE__" && subs.indexOf(activeSubTab) >= 0){
+    sSubCatSel.value = activeSubTab;
+    sSubCatNew.hidden = true;
+  }else if(subs.length > 0){
+    sSubCatSel.value = subs[0];
+    sSubCatNew.hidden = true;
+  }else{
+    sSubCatSel.value = "__NEW__";
+    sSubCatNew.hidden = false;
+  }
+  syncNamePlaceholder();
+}
+
+function syncNamePlaceholder(){
+  var cat = sCat.value;
+  if(cat && cat !== "自定义"){
+    if(sSubCatSel.value === "__NEW__"){
+      var typed = sSubCatNew.value.trim();
+      sName.placeholder = typed ? ("默认使用：" + typed + "（可留空）") : "可留空（默认与上方新建小类同名）";
+    }else if(sSubCatSel.value){
+      sName.placeholder = "默认使用：" + sSubCatSel.value + "（可留空）";
+    }else{
+      sName.placeholder = "请输入物质名称（如：黑曜石宝箱）";
+    }
+  }else{
+    sName.placeholder = "请输入物质名称（如：黑曜石宝箱）";
+  }
+}
+
+sCat.addEventListener("change", fillSubCatSelect);
+sSubCatSel.addEventListener("change", function(){
+  sSubCatNew.hidden = (sSubCatSel.value !== "__NEW__");
+  syncNamePlaceholder();
+  if(!sSubCatNew.hidden) sSubCatNew.focus();
+});
+sSubCatNew.addEventListener("input", syncNamePlaceholder);
+
+var editingTarget = null;
+var editMode = "remain"; // "remain" 或 "got"
+var etTabRemain = $("#etTabRemain"), etTabGot = $("#etTabGot");
+var etPaneRemain = $("#etPaneRemain"), etPaneGot = $("#etPaneGot");
+var gotDay = $("#gotDay"), gotHour = $("#gotHour"), gotMin = $("#gotMin"), etGotPreview = $("#etGotPreview");
+
+function switchEditTab(mode){
+  editMode = (mode === "got") ? "got" : "remain";
+  etTabRemain.className = "et-tab" + (editMode === "remain" ? " on" : "");
+  etTabGot.className = "et-tab" + (editMode === "got" ? " on" : "");
+  etPaneRemain.hidden = (editMode !== "remain");
+  etPaneGot.hidden = (editMode !== "got");
+  if(editMode === "got") updateGotPreview();
+}
+etTabRemain.addEventListener("click", function(){ switchEditTab("remain"); });
+etTabGot.addEventListener("click", function(){ switchEditTab("got"); });
+
+function setGotInputsFromTs(ts){
+  var d = new Date(ts);
+  var diff = dayDiff(ts);
+  gotDay.value = (diff <= -1) ? "-1" : "0";
+  gotHour.value = d.getHours();
+  gotMin.value = d.getMinutes();
+  updateGotPreview();
+}
+
+function getGotTimestamp(){
+  var now = new Date();
+  var dayOffset = parseInt(gotDay.value, 10) || 0;
+  var h = Math.min(23, Math.max(0, parseInt(gotHour.value, 10) || 0));
+  var m = Math.min(59, Math.max(0, parseInt(gotMin.value, 10) || 0));
+  var target = new Date(now.getFullYear(), now.getMonth(), now.getDate() + dayOffset, h, m, 0, 0);
+  return target.getTime();
+}
+
+function updateGotPreview(){
+  if(!editingTarget) return;
+  var res = byId(editingTarget.rid);
+  if(!res) return;
+  var gotTs = getGotTimestamp();
+  var b = bounds(res);
+  var winStartTs = gotTs + b[0] * 60000;
+  var endTs = gotTs + b[1] * 60000;
+  var now = Date.now();
+  var note = gotTs > now ? '<span style="color:var(--alert)">⚠️ 晚于当前时间，请确认日期</span><br>' : "";
+  if(b[1] > b[0]){
+    etGotPreview.innerHTML = note + "下次刷新窗：<b>" + fmtWhen(winStartTs) + " ~ " + fmtHM(endTs) + "</b>";
+  }else{
+    etGotPreview.innerHTML = note + "下次刷新：<b>" + fmtWhen(endTs) + "</b>";
+  }
+}
+
+[gotDay, gotHour, gotMin].forEach(function(el){
+  el.addEventListener("input", updateGotPreview);
+  el.addEventListener("change", updateGotPreview);
+});
+
+$("#etGotChips").querySelectorAll(".chip").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    var agoMins = parseInt(btn.dataset.ago, 10) || 0;
+    setGotInputsFromTs(Date.now() - agoMins * 60000);
+  });
+});
+
+function openEditTimeModal(rid, isleIdx){
+  var res = byId(rid);
+  if(!res) return;
+  editingTarget = {rid: rid, isle: isleIdx};
+  var now = Date.now();
+  var eff = effectiveStart(res, isleIdx, now);
+
+  $("#editTimeTitle").textContent = res.name + " · " + (isleIdx + 1) + "岛 修改时间";
+  var remSec = 0;
+  if(eff && eff.end > now){
+    remSec = Math.ceil((eff.end - now) / 1000);
+  }else{
+    var b = bounds(res);
+    remSec = b[0] * 60;
+  }
+  setModalHmsFromSeconds(remSec);
+
+  var baseGotTs = (res.starts && res.starts[isleIdx]) ? res.starts[isleIdx] : now;
+  setGotInputsFromTs(baseGotTs);
+
+  switchEditTab(editMode);
+  $("#editTimeModal").hidden = false;
+  if(editMode === "remain"){
+    $("#etMin").focus();
+    $("#etMin").select();
+  }else{
+    gotHour.focus();
+    gotHour.select();
+  }
+}
+
+function setModalHmsFromSeconds(totalSec){
+  totalSec = Math.max(0, Math.round(totalSec));
+  var h = Math.floor(totalSec / 3600);
+  var m = Math.floor((totalSec % 3600) / 60);
+  var s = totalSec % 60;
+  $("#etHour").value = h;
+  $("#etMin").value = m;
+  $("#etSec").value = s;
+}
+
+function getModalSeconds(){
+  var h = Math.max(0, parseInt($("#etHour").value, 10) || 0);
+  var m = Math.max(0, parseInt($("#etMin").value, 10) || 0);
+  var s = Math.max(0, parseInt($("#etSec").value, 10) || 0);
+  return h * 3600 + m * 60 + s;
+}
+
+$("#etRemainChips").querySelectorAll(".chip").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    if(btn.dataset.adj !== undefined){
+      var delta = parseInt(btn.dataset.adj, 10);
+      setModalHmsFromSeconds(getModalSeconds() + delta);
+    }else if(btn.dataset.set !== undefined){
+      setModalHmsFromSeconds(parseInt(btn.dataset.set, 10));
+    }
+  });
+});
+
+function saveEditedTime(){
+  if(!editingTarget) return;
+  var res = byId(editingTarget.rid);
+  var i = editingTarget.isle;
+  if(!res) return;
+
+  var now = Date.now();
+  var key = res.id + ":" + i;
+  if(!Array.isArray(res.customEnd)) res.customEnd = new Array(ISLES).fill(null);
+
+  if(editMode === "got"){
+    var gotTs = getGotTimestamp();
+    res.starts[i] = gotTs;
+    res.customEnd[i] = null;
+    var eff = effectiveStart(res, i, now);
+    rowState[key] = eff ? isleStateAt(eff, now) : "run";
+    lastRound[key] = eff ? eff.round : 0;
+    delete loopCache[key];
+    delete recentLoopAt[key];
+    showToast("已按获取时间 " + fmtShortClock(gotTs) + " 自动算出下次刷新");
+  }else{
+    var totalSec = getModalSeconds();
+    var targetEnd = now + totalSec * 1000;
+    res.starts[i] = now;
+    res.customEnd[i] = targetEnd;
+    rowState[key] = totalSec > 0 ? "run" : "due";
+    lastRound[key] = 0;
+    delete loopCache[key];
+    delete recentLoopAt[key];
+    showToast("已更新 " + res.name + " " + (i + 1) + "岛 剩余时间");
+  }
+
+  $("#editTimeModal").hidden = true;
+  editingTarget = null;
+  saveActive();
+  render();
+  unlockAudio();
+}
+
+$("#etSaveBtn").addEventListener("click", saveEditedTime);
+$("#etCancelBtn").addEventListener("click", function(){
+  $("#editTimeModal").hidden = true;
+  editingTarget = null;
+});
+
+function nearestKey(res, now){
+  var best = Infinity;
+  for(var i = 0; i < ISLES; i++){
+    var eff = effectiveStart(res, i, now);
+    if(!eff) continue;
+    var st = isleStateAt(eff, now);
+    var k = (st === "due") ? (eff.end - now - 1e9)
+          : (st === "win") ? (eff.end - now - 5e8)
+          : (eff.winStart - now);
+    if(k < best) best = k;
+  }
+  return best;
+}
+
+function needPickSubCatFirst(){
+  if(activeTab === "全部") return false;
+  var subs = subCatsOf(activeTab);
+  return subs.length > 0 && !activeSubTab;
+}
+
+function visibleSorted(){
+  if(needPickSubCatFirst()) return [];
+  var now = Date.now();
+  var arr = currentResources().filter(function(r){
+    if(activeTab === "全部") return true;
+    if(r.cat !== activeTab) return false;
+    if(!activeSubTab || activeSubTab === "__ALL__") return true;
+    if(activeSubTab === "__NONE__") return !r.subcat;
+    return r.subcat === activeSubTab;
+  });
+  arr.sort(function(a, b){
+    var ka = nearestKey(a, now), kb = nearestKey(b, now);
+    return ka === kb ? 0 : (ka < kb ? -1 : 1);
+  });
+  return arr;
+}
+
+function syncOrder(){
+  var vis = visibleSorted();
+  var lis = listEl.children;
+  if(lis.length !== vis.length) return;
+  var same = true, i;
+  for(i = 0; i < lis.length; i++){
+    if(lis[i].dataset.rid !== vis[i].id){ same = false; break; }
+  }
+  if(same) return;
+  var map = {};
+  for(i = 0; i < lis.length; i++) map[lis[i].dataset.rid] = lis[i];
+  for(i = 0; i < vis.length; i++){
+    if(map[vis[i].id]) listEl.appendChild(map[vis[i].id]);
+  }
+}
+
+function buildIsle(res, i){
+  var row = document.createElement("div");
+  row.className = "isle-row";
+  row.dataset.rid = res.id;
+  row.dataset.isle = i;
+  var looping = effLoop(res, i);
+  row.innerHTML =
+    '<span class="isle-name">' + (i + 1) + '岛</span>' +
+    '<span class="isle-phase"></span>' +
+    '<span class="clock" title="点击修改时间">--:--</span>' +
+    '<span class="next"></span>' +
+    '<span class="rec-at"></span>' +
+    '<div class="isle-btns">' +
+      '<button class="btn rec" type="button">记录</button>' +
+      '<button class="btn edit-t" type="button">改时</button>' +
+      '<button class="btn lp' + (looping ? ' on' : '') + '" type="button" aria-pressed="' + (looping ? 'true' : 'false') + '">' +
+        (looping ? '循环' : '单次') + '</button>' +
+      '<button class="btn del clear" type="button" aria-label="清空">×</button>' +
+    '</div>' +
+    '<div class="bar"><span class="win-mark" hidden></span><i></i></div>';
+
+  row.querySelector(".lp").addEventListener("click", function(){ toggleIsleLoop(res.id, i); });
+  row.querySelector(".rec").addEventListener("click", function(){ record(res.id, i); });
+  row.querySelector(".edit-t").addEventListener("click", function(){ openEditTimeModal(res.id, i); });
+  row.querySelector(".clock").addEventListener("click", function(){ openEditTimeModal(res.id, i); });
+  row.querySelector(".clear").addEventListener("click", function(){ clearIsle(res.id, i); });
+  return row;
+}
+
+function buildRes(res){
+  var li = document.createElement("li");
+  li.className = "res" + (res.open ? " open" : "");
+  li.dataset.rid = res.id;
+  var trunk = document.createElement("div");
+  trunk.className = "trunk";
+  trunk.dataset.rid = res.id;
+  trunk.setAttribute("role", "button");
+  trunk.tabIndex = 0;
+  trunk.setAttribute("aria-expanded", String(res.open));
+  var catTag = "";
+  if(res.cat && res.cat !== "自定义"){
+    catTag = '<span class="cat">' + esc(res.cat + (res.subcat ? " · " + res.subcat : "")) + '</span>';
+  }
+  trunk.innerHTML =
+    '<span class="caret" aria-hidden="true">▸</span>' +
+    '<span class="res-name" title="' + esc(res.name) + '">' + esc(res.name) + '</span>' +
+    catTag +
+    '<span class="per">' + labelOf(res) + '</span>' +
+    '<span class="summary"></span>' +
+    '<button class="btn del" type="button" aria-label="删除">×</button>';
+  trunk.addEventListener("click", function(e){
+    if(e.target.closest("button")) return;
+    toggleRes(res.id);
+  });
+  trunk.querySelector(".del").addEventListener("click", function(){ delRes(res.id); });
+  li.appendChild(trunk);
+  if(res.open){
+    var wrap = document.createElement("div");
+    wrap.className = "branches";
+    for(var i = 0; i < ISLES; i++) wrap.appendChild(buildIsle(res, i));
+    li.appendChild(wrap);
+  }
+  return li;
+}
+
+function fmtCN(ms){
+  var m = Math.max(0, Math.ceil(ms / 60000));
+  var h = Math.floor(m / 60), mm = m % 60;
+  return h > 0 ? h + "时" + mm + "分" : mm + "分";
+}
+
+function subSummary(sc, now){
+  var items = currentResources().filter(function(r){ return r.cat === activeTab && r.subcat === sc; });
+  var e0 = null, l0 = null, best = null, dueCnt = 0, firstDue = -1;
+  items.forEach(function(res){
+    var b = bounds(res);
+    e0 = (e0 === null) ? b[0] : Math.min(e0, b[0]);
+    l0 = (l0 === null) ? b[1] : Math.max(l0, b[1]);
+    for(var i = 0; i < ISLES; i++){
+      var eff = effectiveStart(res, i, now);
+      if(!eff) continue;
+      var st = isleStateAt(eff, now);
+      if(st === "run"){
+        var rem = (eff.hasWin ? eff.winStart : eff.end) - now;
+        if(!best || (best.mode !== "inWin" && rem < best.rem)) best = {isle: i, rem: rem, mode: "toWin"};
+      }else if(st === "win"){
+        var remE = eff.end - now;
+        if(!best || best.mode !== "inWin" || remE < best.rem) best = {isle: i, rem: remE, mode: "inWin"};
+      }else if(st === "due"){
+        dueCnt++;
+        if(firstDue < 0) firstDue = i;
+      }
+    }
+  });
+  var range = items.length ? (e0 < l0 ? fmtMins(e0) + "~" + fmtMins(l0) : fmtMins(l0)) : "暂无物质";
+  var stat = "未记录", color = "var(--dim)", isle = items.length + " 项";
+  if(best){
+    color = "var(--amber)";
+    stat = (best.mode === "inWin") ? ("已刷新 ⌛ " + fmtCN(best.rem) + "后结束") : ("⌛ " + fmtCN(best.rem));
+    isle = "岛屿 " + (best.isle + 1);
+  }else if(dueCnt > 0){
+    color = "var(--alert)";
+    stat = dueCnt > 1 ? (dueCnt + " 岛到点") : "已到点";
+    isle = "岛屿 " + (firstDue + 1);
+  }
+  return {range: range, stat: stat, color: color, isle: isle};
+}
+
+function patchSubCards(){
+  var now = Date.now();
+  subGuideEl.querySelectorAll(".sub-card").forEach(function(card){
+    var sm = subSummary(card.getAttribute("data-sub"), now);
+    var st = card.querySelector(".sc-stat"), is = card.querySelector(".sc-isle"), rg = card.querySelector(".sc-range");
+    if(st){ st.textContent = sm.stat; st.style.color = sm.color; }
+    if(is) is.textContent = sm.isle;
+    if(rg) rg.textContent = sm.range;
+  });
+}
+
+function packImg(key, d){
+  return btoa(unescape(encodeURIComponent(JSON.stringify({v: 3, s: clientId, img: {k: key, d: d}}))));
+}
+
+function sendSubImg(code, key, d){
+  var packed = packImg(key, d);
+  if(packed.length > 4000) return;
+  var c = conns[code];
+  if(c && c.bc){ try{ c.bc.postMessage(packed); }catch(e){} }
+  fetch("https://ntfy.sh/" + topicForRoom(code), { method: "POST", body: packed }).catch(function(){});
+}
+
+function pushAllImages(){
+  if(!activeSquad) return;
+  var code = activeSquad, imgs = teamData.subImgs || {};
+  Object.keys(imgs).forEach(function(k, idx){
+    setTimeout(function(){ sendSubImg(code, k, imgs[k]); }, 300 * (idx + 1));
+  });
+}
+
+function compressSquare(im, key){
+  var w = im.naturalWidth || im.width, h = im.naturalHeight || im.height;
+  var side = Math.min(w, h), sx = (w - side) / 2, sy = (h - side) / 2;
+  var sizes = [96, 80, 64, 48], qs = [0.75, 0.55, 0.4, 0.3], d = "";
+  for(var a = 0; a < sizes.length; a++){
+    var cv = document.createElement("canvas");
+    cv.width = cv.height = sizes[a];
+    var cx = cv.getContext("2d");
+    cx.fillStyle = "#fff";
+    cx.fillRect(0, 0, sizes[a], sizes[a]);
+    cx.drawImage(im, sx, sy, side, side, 0, 0, sizes[a], sizes[a]);
+    for(var b = 0; b < qs.length; b++){
+      d = cv.toDataURL("image/jpeg", qs[b]);
+      if(packImg(key, d).length <= 3800) return d;
+    }
+  }
+  return d;
+}
+
+var imgPicker = null;
+function pickSubImage(cat, sub){
+  if(!imgPicker){
+    imgPicker = document.createElement("input");
+    imgPicker.type = "file";
+    imgPicker.accept = "image/*";
+    imgPicker.style.display = "none";
+    document.body.appendChild(imgPicker);
+    imgPicker.addEventListener("change", function(){
+      var file = imgPicker.files && imgPicker.files[0];
+      if(!file) return;
+      var pc = imgPicker._cat, ps = imgPicker._sub;
+      var reader = new FileReader();
+      reader.onload = function(){
+        var im = new Image();
+        im.onload = function(){
+          var key = imgKey(pc, ps);
+          var d = compressSquare(im, key);
+          if(!d){ showToast("图片处理失败"); return; }
+          var store = curStore();
+          if(!store.subImgs) store.subImgs = {};
+          store.subImgs[key] = d;
+          saveActive(true);
+          if(currentMode === "team" && activeSquad) sendSubImg(activeSquad, key, d);
+          if(!subGuideEl.hidden) renderSubGuide();
+          showToast("已更换图片" + ((currentMode === "team" && activeSquad) ? "，已同步给小队" : ""));
+        };
+        im.onerror = function(){ showToast("图片读取失败"); };
+        im.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  imgPicker._cat = cat;
+  imgPicker._sub = sub;
+  imgPicker.value = "";
+  imgPicker.click();
+}
+
+function renderSubGuide(){
+  if(!needPickSubCatFirst()){
+    subGuideEl.hidden = true;
+    subGuideEl.innerHTML = "";
+    return;
+  }
+  subGuideEl.hidden = false;
+  var subs = subCatsOf(activeTab);
+  var now = Date.now();
+  var imgs = curStore().subImgs || {};
+  var html = '<p class="sub-guide-title">选择「<b>' + esc(activeTab) + '</b>」小类</p><div class="sub-cards">';
+
+  subs.forEach(function(sc){
+    var sm = subSummary(sc, now);
+    var im = imgs[imgKey(activeTab, sc)];
+    var imgHtml = im ? '<img src="' + esc(im) + '" alt="">' : '<span>' + esc(sc.charAt(0)) + '</span>';
+    html +=
+      '<div class="sub-card" data-sub="' + esc(sc) + '">' +
+        '<button class="sc-x" type="button" data-act="del" title="删除小类">×</button>' +
+        '<div class="sc-img" data-act="img" title="点击更换图片">' + imgHtml + '</div>' +
+        '<div class="sc-name">' + esc(sc) + '</div>' +
+        '<div class="sc-range">' + esc(sm.range) + '</div>' +
+        '<div class="sc-stat" style="color:' + sm.color + '">' + esc(sm.stat) + '</div>' +
+        '<div class="sc-isle">' + esc(sm.isle) + '</div>' +
+        '<button class="sc-add" type="button" data-act="add" title="添加物质">+</button>' +
+      '</div>';
+  });
+  html += '</div>';
+  subGuideEl.innerHTML = html;
+  subGuideEl.querySelectorAll(".sub-card").forEach(function(card){
+    card.addEventListener("click", function(ev){
+      var actEl = ev.target.closest ? ev.target.closest("[data-act]") : null;
+      var act = actEl ? actEl.getAttribute("data-act") : "";
+      var sc = card.getAttribute("data-sub");
+      if(act === "del"){ deleteSubCategory(activeTab, sc); return; }
+      if(act === "add"){
+        openSheet();
+        sSubCatSel.value = sc;
+        sSubCatNew.hidden = true;
+        syncNamePlaceholder();
+        return;
+      }
+      if(act === "img"){ pickSubImage(activeTab, sc); return; }
+      activeSubTab = sc;
+      saveActive(true);
+      renderSubTabs();
+      render();
+    });
+  });
+}
+
+function render(){
+  listEl.innerHTML = "";
+  renderSubGuide();
+  if(typeof syncQuickFloat === "function") syncQuickFloat();
+  if(needPickSubCatFirst()){
+    emptyEl.hidden = true;
+    bannerText = "";
+    tick();
+    return;
+  }
+  var resourcesList = currentResources();
+  var vis = visibleSorted();
+  for(var i = 0; i < vis.length; i++) listEl.appendChild(buildRes(vis[i]));
+  if(resourcesList.length === 0){
+    emptyEl.hidden = false;
+    emptyEl.textContent = "暂无物质，点击右上角「＋ 添加」";
+  }else if(vis.length === 0){
+    emptyEl.hidden = false;
+    emptyEl.textContent = "当前分类暂无物质";
+  }else{
+    emptyEl.hidden = true;
+  }
+  bannerText = "";
+  tick();
+}
+
+var pendingSmartAction = null;
+
+function cnNumToInt(str){
+  if(!str) return 0;
+  var map = {"零":0,"一":1,"二":2,"两":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9,"十":10};
+  if(/^\d+$/.test(str)) return parseInt(str, 10);
+  if(str === "半") return 0.5;
+  if(str.length === 1 && map[str] !== undefined) return map[str];
+  if(str.indexOf("十") >= 0){
+    var parts = str.split("十");
+    var tens = parts[0] ? (map[parts[0]] || 1) : 1;
+    var ones = parts[1] ? (map[parts[1]] || 0) : 0;
+    return tens * 10 + ones;
+  }
+  return 0;
+}
+
+function parseSmartCommand(rawText){
+  var text = (rawText || "").trim();
+  if(!text) return { err: "请输入内容，如：黑曜石宝箱 1岛 刚刚" };
+
+  var now = Date.now();
+  var isleIdx = qfSelectedIsle || 0;
+  var isleSpecified = false;
+
+  var isleMatch = text.match(/(10|[1-9]|十|[一二三四五六七八九])\s*[号]?岛/);
+  if(isleMatch){
+    var n = cnNumToInt(isleMatch[1]);
+    if(n >= 1 && n <= ISLES){
+      isleIdx = n - 1;
+      isleSpecified = true;
+    }
+    text = text.replace(isleMatch[0], " ");
+  }
+
+  var mode = "got";
+  var gotTs = now;
+  var remSec = 0;
+  var timeDesc = "刚刚捡到";
+
+  var remMatch = text.match(/(?:剩|剩余|还有)\s*(?:(\d+|[一二两三四五六七八九十半]+)\s*(?:小时|时|h))?\s*(?:(\d+|[一二两三四五六七八九十]+)\s*(?:分钟|分|m))?/i);
+  var clockMatch = text.match(/(\d{1,2})\s*[:：点时]\s*(\d{1,2})\s*分?(?:\s*捡到?)?/);
+  var agoHourMinMatch = text.match(/(?:前|过去)?\s*(\d+|[一二两三四五六七八九十半]+)\s*(?:小时|时|h)\s*(\d+|[一二两三四五六七八九十]+)?\s*(?:分钟|分)?(?:前|捡|刷)?/i);
+  var agoMinMatch = text.match(/(?:前\s*(\d+|[一二两三四五六七八九十半]+)\s*(?:分钟|分)|(\d+|[一二两三四五六七八九十半]+)\s*(?:分钟|分)\s*前)/);
+  var justNowMatch = text.match(/刚刚|刚才|刚捡|现在|才捡/);
+
+  if(remMatch && (remMatch[1] || remMatch[2])){
+    mode = "rem";
+    var rh = remMatch[1] ? cnNumToInt(remMatch[1]) : 0;
+    var rm = remMatch[2] ? cnNumToInt(remMatch[2]) : 0;
+    remSec = Math.round(rh * 3600 + rm * 60);
+    timeDesc = "设剩余时间 " + fmtMins(Math.round(remSec / 60));
+    text = text.replace(remMatch[0], " ");
+  }else if(clockMatch){
+    var ch = Math.min(23, Math.max(0, parseInt(clockMatch[1], 10) || 0));
+    var cm = Math.min(59, Math.max(0, parseInt(clockMatch[2], 10) || 0));
+    var dNow = new Date(now);
+    var target = new Date(dNow.getFullYear(), dNow.getMonth(), dNow.getDate(), ch, cm, 0, 0).getTime();
+    if(target > now + 60000) target -= 86400000;
+    gotTs = target;
+    timeDesc = fmtShortClock(gotTs) + " 捡到";
+    text = text.replace(clockMatch[0], " ");
+  }else if(agoMinMatch){
+    var mStr = agoMinMatch[1] || agoMinMatch[2];
+    var mins = (mStr === "半") ? 0.5 : cnNumToInt(mStr);
+    gotTs = now - Math.round(mins * 60000);
+    timeDesc = mins + "分钟前捡到 (" + fmtHM(gotTs) + ")";
+    text = text.replace(agoMinMatch[0], " ");
+  }else if(agoHourMinMatch){
+    var ah = agoHourMinMatch[1] ? cnNumToInt(agoHourMinMatch[1]) : 0;
+    var am = agoHourMinMatch[2] ? cnNumToInt(agoHourMinMatch[2]) : 0;
+    var totalAgoM = Math.round(ah * 60 + am);
+    gotTs = now - totalAgoM * 60000;
+    timeDesc = fmtMins(totalAgoM) + "前捡到 (" + fmtHM(gotTs) + ")";
+    text = text.replace(agoHourMinMatch[0], " ");
+  }else if(justNowMatch){
+    gotTs = now;
+    timeDesc = "刚刚捡到 (" + fmtHM(gotTs) + ")";
+    text = text.replace(justNowMatch[0], " ");
+  }else{
+    gotTs = now;
+    timeDesc = "刚刚捡到 (" + fmtHM(gotTs) + ")";
+  }
+
+  var keyword = text.replace(/捡到|捡了|刷了|刷新|记录|录入|的|在|了|，|。|,|\s+/g, "").trim();
+
+  var list = currentResources();
+  var matchedRes = null;
+  var bestScore = 0;
+
+  if(keyword){
+    list.forEach(function(r){
+      var cand = r.name || "";
+      var sub = r.subcat || "";
+      var score = 0;
+      if(cand === keyword || sub === keyword) score = 100;
+      else if(cand.indexOf(keyword) >= 0 || keyword.indexOf(cand) >= 0) score = 80;
+      else if(sub && (sub.indexOf(keyword) >= 0 || keyword.indexOf(sub) >= 0)) score = 75;
+      else{
+        var hit = 0;
+        for(var c = 0; c < keyword.length; c++){
+          if(cand.indexOf(keyword[c]) >= 0) hit++;
+        }
+        if(hit >= 2) score = Math.round((hit / Math.max(cand.length, keyword.length)) * 60);
+      }
+      if(score > bestScore){
+        bestScore = score;
+        matchedRes = r;
+      }
+    });
+  }else if(qfSelectedResId){
+    matchedRes = byId(qfSelectedResId);
+  }else if(list.length > 0){
+    matchedRes = list[0];
+  }
+
+  var willCreateNew = false;
+  var newCat = "自定义", newSub = "";
+  if(!matchedRes){
+    if(!keyword){
+      return { err: "未识别到物品名称，请如：黑曜石宝箱 刚刚" };
+    }
+    var map = currentSubCatsMap();
+    for(var catKey in map){
+      var subs = map[catKey] || [];
+      for(var j = 0; j < subs.length; j++){
+        if(subs[j] === keyword || subs[j].indexOf(keyword) >= 0 || keyword.indexOf(subs[j]) >= 0){
+          newCat = catKey;
+          newSub = subs[j];
+          keyword = subs[j];
+          break;
+        }
+      }
+      if(newSub) break;
+    }
+    willCreateNew = true;
+  }
+
+  return {
+    res: matchedRes,
+    willCreateNew: willCreateNew,
+    newName: keyword,
+    newCat: newCat,
+    newSub: newSub,
+    isle: isleIdx,
+    isleSpecified: isleSpecified,
+    mode: mode,
+    gotTs: gotTs,
+    remSec: remSec,
+    timeDesc: timeDesc
+  };
+}
+
+function renderSmartConfirmModal(){
+  if(!pendingSmartAction) return;
+  var p = pendingSmartAction;
+  var dispName = p.res
+    ? (p.res.name + (p.res.cat && p.res.cat !== "自定义" ? " (" + p.res.cat + ")" : ""))
+    : (p.newName + " [新添2~6h物质]");
+  $("#scResName").textContent = dispName;
+  $("#scTimeDesc").textContent = p.timeDesc;
+
+  var b = p.res ? bounds(p.res) : [120, 360];
+  if(p.mode === "rem"){
+    var endTs = Date.now() + p.remSec * 1000;
+    $("#scNextDesc").textContent = fmtWhen(endTs) + " 到点";
+  }else{
+    var winStart = p.gotTs + b[0] * 60000;
+    var winEnd = p.gotTs + b[1] * 60000;
+    $("#scNextDesc").textContent = (b[1] > b[0])
+      ? (fmtWhen(winStart) + " ~ " + fmtHM(winEnd))
+      : fmtWhen(winEnd);
+  }
+
+  var grid = $("#scIslesGrid");
+  grid.innerHTML = "";
+  for(var i = 0; i < ISLES; i++){
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "parse-isle" + (i === p.isle ? " on" : "");
+    btn.textContent = (i + 1) + "岛";
+    (function(idx){
+      btn.addEventListener("click", function(){
+        pendingSmartAction.isle = idx;
+        renderSmartConfirmModal();
+      });
+    })(i);
+    grid.appendChild(btn);
+  }
+}
+
+function triggerSmartInput(inputEl){
+  var resObj = parseSmartCommand(inputEl.value);
+  if(resObj.err){
+    showToast(resObj.err);
+    inputEl.focus();
+    return;
+  }
+  pendingSmartAction = resObj;
+  pendingSmartAction.sourceInput = inputEl;
+  renderSmartConfirmModal();
+  $("#smartConfirmModal").hidden = false;
+}
+
+$("#scOkBtn").addEventListener("click", function(){
+  if(!pendingSmartAction) return;
+  var p = pendingSmartAction;
+  var targetRes = p.res;
+  if(!targetRes && p.willCreateNew){
+    targetRes = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      name: p.newName,
+      cat: p.newCat,
+      subcat: p.newSub,
+      kind: "range",
+      base: 360,
+      early: 120,
+      late: 360,
+      open: true,
+      loop: false,
+      loops: new Array(ISLES).fill(null),
+      starts: new Array(ISLES).fill(null),
+      customEnd: new Array(ISLES).fill(null)
+    };
+    currentResources().unshift(targetRes);
+  }
+  var i = p.isle;
+  var key = targetRes.id + ":" + i;
+  var now = Date.now();
+  if(!Array.isArray(targetRes.customEnd)) targetRes.customEnd = new Array(ISLES).fill(null);
+
+  if(p.mode === "rem"){
+    targetRes.starts[i] = now;
+    targetRes.customEnd[i] = now + p.remSec * 1000;
+    rowState[key] = p.remSec > 0 ? "run" : "due";
+    lastRound[key] = 0;
+  }else{
+    targetRes.starts[i] = p.gotTs;
+    targetRes.customEnd[i] = null;
+    var eff = effectiveStart(targetRes, i, now);
+    rowState[key] = eff ? isleStateAt(eff, now) : "run";
+    lastRound[key] = eff ? eff.round : 0;
+  }
+  targetRes.open = true;
+  if(activeTab !== "全部" && targetRes.cat === activeTab && targetRes.subcat){
+    activeSubTab = targetRes.subcat;
+  }
+  qfSelectedResId = targetRes.id;
+  qfSelectedIsle = i;
+  delete loopCache[key];
+  delete recentLoopAt[key];
+
+  if(p.sourceInput) p.sourceInput.value = "";
+  $("#smartConfirmModal").hidden = true;
+  pendingSmartAction = null;
+
+  saveActive();
+  renderTabs();
+  render();
+  unlockAudio();
+  showToast("✓ 已更新 " + targetRes.name + " · " + (i + 1) + "岛");
+});
+
+$("#scCancelBtn").addEventListener("click", function(){
+  $("#smartConfirmModal").hidden = true;
+  pendingSmartAction = null;
+  showToast("已取消修改");
+});
+
+$("#topSmartBtn").addEventListener("click", function(){
+  triggerSmartInput($("#topSmartInp"));
+});
+$("#topSmartInp").addEventListener("keydown", function(e){
+  if(e.key === "Enter"){
+    e.preventDefault();
+    triggerSmartInput($("#topSmartInp"));
+  }
+});
+
+function byId(id){
+  var list = currentResources();
+  for(var i = 0; i < list.length; i++) if(list[i].id === id) return list[i];
+  return null;
+}
+
+function toggleRes(id){
+  var res = byId(id); if(!res) return;
+  res.open = !res.open;
+  saveActive(true); render();
+}
+
+function record(id, i){
+  var res = byId(id); if(!res) return;
+  var key = id + ":" + i;
+  res.starts[i] = Date.now();
+  if(Array.isArray(res.customEnd)) res.customEnd[i] = null;
+  rowState[key] = "run";
+  lastRound[key] = 0;
+  delete recentLoopAt[key];
+  saveActive(); render();
+  unlockAudio();
+}
+
+function toggleIsleLoop(id, i){
+  var res = byId(id); if(!res) return;
+  if(effLoop(res, i)){
+    var eff = effectiveStart(res, i, Date.now());
+    if(eff && eff.round > 0){
+      res.starts[i] = eff.start;
+      if(Array.isArray(res.customEnd)) res.customEnd[i] = null;
+    }
+    res.loops[i] = false;
+  }else{
+    res.loops[i] = true;
+  }
+  loopCache = {}; lastRound = {}; recentLoopAt = {};
+  saveActive(); render();
+}
+
+function clearIsle(id, i){
+  var res = byId(id); if(!res) return;
+  askConfirm("清空岛计时", "确定清空「" + res.name + " · " + (i + 1) + "岛」的计时吗？", function(){
+    var key = id + ":" + i;
+    res.starts[i] = null;
+    if(Array.isArray(res.customEnd)) res.customEnd[i] = null;
+    delete rowState[key];
+    delete loopCache[key];
+    delete lastRound[key];
+    delete recentLoopAt[key];
+    saveActive(); render();
+  });
+}
+
+function dropKeys(prefix){
+  [rowState, loopCache, lastRound, recentLoopAt].forEach(function(m){
+    for(var k in m) if(k.indexOf(prefix) === 0) delete m[k];
+  });
+}
+
+function delRes(id){
+  var res = byId(id); if(!res) return;
+  askConfirm("删除物质", "确定删除「" + res.name + "」及它所有岛的记录吗？", function(){
+    if(currentMode === "team"){
+      teamData.resources = teamData.resources.filter(function(r){ return r.id !== id; });
+    }else{
+      localData.resources = localData.resources.filter(function(r){ return r.id !== id; });
+    }
+    dropKeys(id + ":");
+    saveActive(); render();
+  });
+}
+
+var lastTickAt = Date.now();
+function tick(){
+  var now = Date.now();
+  var gap = now - lastTickAt;
+  lastTickAt = now;
+  var dueAll = [], winAll = [], loopAll = [];
+  var alerts = [];
+  var needExpand = [];
+  var resourcesList = currentResources();
+
+  for(var r = 0; r < resourcesList.length; r++){
+    var res = resourcesList[r];
+    var dueIsles = [], winIsles = [], recorded = 0, best = null;
+    for(var i = 0; i < ISLES; i++){
+      var key = res.id + ":" + i;
+      var looping = effLoop(res, i);
+      var eff = effectiveStart(res, i, now);
+      var st = eff ? isleStateAt(eff, now) : "idle";
+      var prev = rowState[key];
+      var label = res.name + "·" + (i + 1) + "岛";
+      var at = eff ? eff.end : 0;
+      if(st !== "idle") recorded++;
+      if(st === "run"){
+        var remToWin = (eff.hasWin ? eff.winStart : eff.end) - now;
+        if(!best || remToWin < best.rem) best = {isle: i, rem: remToWin, mode: eff.hasWin ? "toWin" : "toEnd"};
+      }else if(st === "win"){
+        winIsles.push(i);
+        winAll.push(label);
+        var remEnd = at - now;
+        if(!best || best.mode !== "inWin" || remEnd < best.rem){
+          best = {isle: i, rem: remEnd, mode: "inWin"};
+        }
+      }else if(st === "due"){
+        dueIsles.push(i);
+        dueAll.push(label);
+      }
+
+      if(booted && eff){
+        var wBase = key + ":" + eff.start;
+        if(st === "run"){
+          var remW = (eff.hasWin ? eff.winStart : eff.end) - now;
+          if(remW > 0 && remW <= 300000 && !warned[wBase + ":a"]){
+            warned[wBase + ":a"] = 1;
+            alerts.push(["还剩5分钟：" + label, eff.hasWin ? "5分钟后进入刷新时段，准备好！" : "5分钟后倒计时结束，准备好！"]);
+          }
+        }else if(st === "win"){
+          var remE = eff.end - now;
+          if(remE > 0 && remE <= 300000 && !warned[wBase + ":b"]){
+            warned[wBase + ":b"] = 1;
+            alerts.push(["还剩5分钟：" + label, "5分钟后到保底必刷时间！"]);
+          }
+        }
+      }
+      if(booted && prev && prev !== st && st === "win"){
+        alerts.push(["进入刷新时段：" + label, "已进入刷新窗口，随时可能刷出！"]);
+      }
+      if(booted && prev && prev !== st && st === "due"){
+        alerts.push(["保底必刷到点：" + label, "已满最大刷新时间，去游戏里确认一下"]);
+        if(!res.open) needExpand.push(res.id);
+      }
+      var lr = lastRound[key];
+      if(booted && looping && eff && lr !== undefined && eff.round > lr){
+        recentLoopAt[key] = now;
+        alerts.push(["循环自动记：" + label, "这轮到点，已自动记上、开始下一轮"]);
+        if(!res.open) needExpand.push(res.id);
+      }
+      if(eff) lastRound[key] = eff.round; else delete lastRound[key];
+      if(recentLoopAt[key] !== undefined && now - recentLoopAt[key] > 120000) delete recentLoopAt[key];
+      if(recentLoopAt[key] !== undefined) loopAll.push(label);
+      rowState[key] = st;
+      var row = listEl.querySelector('.isle-row[data-rid="' + res.id + '"][data-isle="' + i + '"]');
+      if(row) patchIsle(row, res, i, st, now, eff);
+    }
+    var trunk = listEl.querySelector('.trunk[data-rid="' + res.id + '"]');
+    if(trunk) patchTrunk(trunk, res, dueIsles, winIsles, recorded, best);
+  }
+  syncOrder();
+  if(alerts.length){
+    beep(); lastBeepAt = now;
+    for(var a = 0; a < alerts.length; a++) notify(alerts[a][0], alerts[a][1]);
+  }
+  if(needExpand.length){
+    for(var n = 0; n < needExpand.length; n++){ var rr = byId(needExpand[n]); if(rr) rr.open = true; }
+    saveActive(true); render();
+    return;
+  }
+  if(booted && dueAll.length && (lastBeepAt === 0 || Date.now() - lastBeepAt > 60000)){
+    beep(); lastBeepAt = Date.now();
+  }
+  if(!subGuideEl.hidden) patchSubCards();
+  updateBanner(dueAll, winAll, loopAll);
+  flashTitle(dueAll.length > 0 || winAll.length > 0);
+  if(gap > 3000){ render(); }
+}
+
+function patchIsle(row, res, i, st, now, eff){
+  row.classList.toggle("idle", st === "idle");
+  row.classList.toggle("run", st === "run");
+  row.classList.toggle("win", st === "win");
+  row.classList.toggle("due", st === "due");
+  row.classList.toggle("has-rec", st !== "idle");
+
+  var phaseEl = row.querySelector(".isle-phase");
+  var clock = row.querySelector(".clock"), nextEl = row.querySelector(".next"), recAt = row.querySelector(".rec-at");
+  var winMark = row.querySelector(".win-mark");
+
+  if(st === "idle" || !eff){
+    row.classList.remove("t-yellow", "t-red");
+    phaseEl.textContent = "";
+    clock.textContent = "--:--";
+    nextEl.textContent = "";
+    recAt.textContent = "";
+    winMark.hidden = true;
+    return;
+  }
+
+  if(eff.hasWin && eff.earlyRatio > 0 && eff.earlyRatio < 1){
+    winMark.hidden = false;
+    winMark.style.left = (eff.earlyRatio * 100).toFixed(1) + "%";
+    winMark.title = "刷新窗口起点：" + fmtWhen(eff.winStart);
+  }else{
+    winMark.hidden = true;
+  }
+
+  var pct = (now - eff.start) / eff.durMs * 100;
+  row.querySelector(".bar i").style.width = Math.min(100, Math.max(0, pct)).toFixed(1) + "%";
+
+  if(st === "run"){
+    if(eff.hasWin){
+      var toWin = eff.winStart - now;
+      var tone = toneOf(toWin);
+      row.classList.toggle("t-yellow", tone === "yellow");
+      row.classList.toggle("t-red", tone === "red");
+      phaseEl.textContent = "距进窗";
+      clock.textContent = fmtRemain(toWin);
+      nextEl.textContent = fmtHM(eff.winStart) + "~" + fmtHM(eff.end) + " 刷";
+    }else{
+      var toEnd = eff.end - now;
+      var tone2 = toneOf(toEnd);
+      row.classList.toggle("t-yellow", tone2 === "yellow");
+      row.classList.toggle("t-red", tone2 === "red");
+      phaseEl.textContent = "计时";
+      clock.textContent = fmtRemain(toEnd);
+      nextEl.textContent = fmtWhen(eff.end);
+    }
+  }else if(st === "win"){
+    var remMax = eff.end - now;
+    row.classList.remove("t-yellow");
+    row.classList.toggle("t-red", remMax < 600000);
+    phaseEl.textContent = "刷新窗";
+    clock.textContent = fmtRemain(remMax);
+    nextEl.textContent = fmtHM(eff.winStart) + "~" + fmtHM(eff.end) + " 随时刷";
+  }else{
+    row.classList.remove("t-yellow", "t-red");
+    phaseEl.textContent = "到点";
+    clock.textContent = "已到点";
+    nextEl.textContent = "逾 " + fmtOver(now - eff.end);
+    row.querySelector(".bar i").style.width = "100%";
+  }
+
+  var looping = effLoop(res, i);
+  var tag = eff.edited ? "改" : (looping && eff.round > 0 ? "循" : "记");
+  recAt.textContent = fmtShortClock(eff.start) + tag;
+}
+
+function patchTrunk(trunk, res, dueIsles, winIsles, recorded, best){
+  var el = trunk.querySelector(".summary");
+  var text, cls = "";
+  if(dueIsles.length){
+    text = dueIsles.map(function(i){ return (i + 1) + "岛"; }).join(" ") + " 到点";
+    cls = "due";
+  }else if(winIsles.length){
+    text = winIsles.map(function(i){ return (i + 1) + "岛"; }).join(" ") + " 刷新窗 (" + fmtRemain(best.rem) + ")";
+    cls = "t-yellow";
+  }else if(best){
+    var prefix = best.mode === "toWin" ? "进窗 " : "";
+    text = (best.isle + 1) + "岛 " + prefix + fmtRemain(best.rem);
+    cls = "t-" + toneOf(best.rem);
+  }else{
+    text = "未记录";
+  }
+  el.textContent = text;
+  el.className = "summary" + (cls ? " " + cls : "");
+}
+
+function updateBanner(dueLabels, winLabels, loopLabels){
+  var parts = [];
+  if(dueLabels.length) parts.push("到点：<b>" + esc(dueLabels.join("、")) + "</b>");
+  if(winLabels && winLabels.length) parts.push("刷新窗：<b>" + esc(winLabels.join("、")) + "</b>");
+  var t = parts.join(" · ");
+  if(t === bannerText && bannerEl.hidden === !t) return;
+  bannerText = t;
+  if(!t){ bannerEl.hidden = true; return; }
+  bannerEl.hidden = false;
+  bannerEl.innerHTML = t;
+}
+
+function flashTitle(anyAlert){
+  if(!anyAlert){
+    if(titleTimer){ clearInterval(titleTimer); titleTimer = null; }
+    document.title = "刷新表";
+    return;
+  }
+  if(titleTimer) return;
+  titleTick = 0;
+  titleTimer = setInterval(function(){
+    titleTick++;
+    document.title = (titleTick % 2) ? "【该刷新了】" : "刷新表";
+  }, 1200);
+}
+
 var UNIT_MINS = {min: 1, hour: 60, day: 1440};
 function unitOf(name){
   var el = sheetEl.querySelector('input[name="' + name + '"]:checked');
@@ -712,7 +2560,6 @@ function openSheet(){
   resetForm();
   sheetEl.hidden = false;
   document.body.style.overflow = "hidden";
-  sName.focus();
 }
 function closeSheet(){
   sheetEl.hidden = true;
@@ -721,411 +2568,24 @@ function closeSheet(){
 }
 function resetForm(){
   sName.value = "";
-  sTime.value = 30; setUnit("unit", "min");
-  sRange.checked = false;
-  sEarly.value = 1; setUnit("eunit", "hour");
-  sLate.value = 2; setUnit("lunit", "hour");
-  sFluc.checked = true; sFlucVal.value = 10; setUnit("funit", "pct");
-  sCat.value = "自定义";
+  sRange.checked = true;
+  sEarly.value = 2; setUnit("eunit", "hour");
+  sLate.value = 6; setUnit("lunit", "hour");
+  sTime.value = 6; setUnit("unit", "hour");
+  var cats = currentCats();
+  if(activeTab !== "全部" && cats.indexOf(activeTab) >= 0){
+    sCat.value = activeTab;
+  }else if(cats.indexOf("宝箱") >= 0){
+    sCat.value = "宝箱";
+  }else{
+    sCat.value = "自定义";
+  }
+  sSubCatNew.value = "";
+  fillSubCatSelect();
   sLoop.checked = false;
   hideErr();
   syncForm();
 }
-
-/* ---------- 分类标签栏 ---------- */
-function tabsList(){
-  return ["全部"].concat(DEFAULT_CATS).concat(customCats);
-}
-function renderTabs(){
-  tabsEl.innerHTML = "";
-  tabsList().forEach(function(name){
-    var b = document.createElement("button");
-    b.type = "button";
-    b.className = "tab" + (name === activeTab ? " on" : "");
-    b.textContent = name;
-    b.setAttribute("aria-pressed", String(name === activeTab));
-    b.addEventListener("click", function(){ switchTab(name); });
-    tabsEl.appendChild(b);
-  });
-  var plus = document.createElement("button");
-  plus.type = "button";
-  plus.className = "tab plus";
-  plus.textContent = "＋ 新分类";
-  plus.title = "自己加一个新分类";
-  plus.addEventListener("click", openCatAdd);
-  tabsEl.appendChild(plus);
-}
-function switchTab(name){
-  if(activeTab === name) return;
-  activeTab = name;
-  closeCatAdd();
-  save();
-  renderTabs();
-  render();
-}
-function openCatAdd(){
-  catAdd.hidden = false;
-  catName.value = "";
-  catErr.hidden = true;
-  catName.focus();
-}
-function closeCatAdd(){
-  catAdd.hidden = true;
-}
-function addCat(){
-  var name = catName.value.trim();
-  if(!name){ catErr.textContent = "先给分类起个名字"; catErr.hidden = false; catName.focus(); return; }
-  if(name === "不分类" || tabsList().indexOf(name) >= 0){
-    catErr.textContent = "已经有「" + name + "」这个分类了"; catErr.hidden = false; catName.focus(); return;
-  }
-  customCats.push(name);
-  save();
-  switchTab(name);
-  closeCatAdd();
-}
-document.getElementById("catOk").addEventListener("click", addCat);
-document.getElementById("catCancel").addEventListener("click", closeCatAdd);
-catName.addEventListener("keydown", function(e){
-  if(e.key === "Enter"){ e.preventDefault(); addCat(); }
-  if(e.key === "Escape") closeCatAdd();
-});
-function fillCatSelect(){
-  sCat.innerHTML = "";
-  var none = document.createElement("option");
-  none.value = "自定义";
-  none.textContent = "不分类";
-  sCat.appendChild(none);
-  DEFAULT_CATS.concat(customCats).forEach(function(name){
-    var o = document.createElement("option");
-    o.value = name;
-    o.textContent = name;
-    sCat.appendChild(o);
-  });
-}
-
-/* ---------- 渲染 ---------- */
-/* 离"最近的刷出时刻"还有多久：该刷新了的为负数（越负越急）；没记录的为 Infinity */
-function nearestKey(res, now){
-  var best = Infinity;
-  for(var i = 0; i < ISLES; i++){
-    var eff = effectiveStart(res, i, now);
-    if(!eff) continue;
-    var k = eff.start + eff.dur * 60000 - now;
-    if(k < best) best = k;
-  }
-  return best;
-}
-/* 当前标签能看到的物质，按紧急程度排：该刷新了 → 剩余短 → 剩余长 → 没记录 */
-function visibleSorted(){
-  var now = Date.now();
-  var arr = resources.filter(function(r){
-    return activeTab === "全部" || r.cat === activeTab;
-  });
-  arr.sort(function(a, b){
-    var ka = nearestKey(a, now), kb = nearestKey(b, now);
-    return ka === kb ? 0 : (ka < kb ? -1 : 1);
-  });
-  return arr;
-}
-/* 倒计时走着的时候保持排序：顺序变了只挪动现有行，不重建（展开状态、滚动位置都不丢） */
-function syncOrder(){
-  var vis = visibleSorted();
-  var lis = listEl.children;
-  if(lis.length !== vis.length) return;
-  var same = true, i;
-  for(i = 0; i < lis.length; i++){
-    if(lis[i].dataset.rid !== vis[i].id){ same = false; break; }
-  }
-  if(same) return;
-  var map = {};
-  for(i = 0; i < lis.length; i++) map[lis[i].dataset.rid] = lis[i];
-  for(i = 0; i < vis.length; i++){
-    if(map[vis[i].id]) listEl.appendChild(map[vis[i].id]);
-  }
-}
-function buildIsle(res, i){
-  var row = document.createElement("div");
-  row.className = "isle-row";
-  row.dataset.rid = res.id;
-  row.dataset.isle = i;
-  var looping = effLoop(res, i);
-  row.innerHTML =
-    '<span class="isle-name">' + (i + 1) + '岛</span>' +
-    '<span class="clock">--:--</span>' +
-    '<span class="next"></span>' +
-    '<span class="rec-at"></span>' +
-    '<button class="btn rec" title="点击表示：刚刚在这个岛刷了，从现在开始倒计时">记录刷新</button>' +
-    '<button class="btn lp' + (looping ? ' on' : '') + '" aria-pressed="' + (looping ? 'true' : 'false') + '">' +
-      (looping ? '循环中' : '循环') + '</button>' +
-    '<button class="btn del clear" aria-label="清空该岛计时" title="清空这个岛的计时">×</button>' +
-    '<div class="bar"><i></i></div>';
-  var lpBtn = row.querySelector(".lp");
-  lpBtn.title = looping
-    ? (res.starts[i] ? "循环开着：到点自动记一次、接着下一轮；点一下关掉"
-                     : "循环开着：先点「记录刷新」打头，之后它自己一直转")
-    : "开启自动循环：这个岛倒计时到点后自动记一次、马上开始下一轮";
-  lpBtn.addEventListener("click", function(){ toggleIsleLoop(res.id, i); });
-  row.querySelector(".rec").addEventListener("click", function(){ record(res.id, i); });
-  row.querySelector(".clear").addEventListener("click", function(){ clearIsle(res.id, i); });
-  return row;
-}
-function buildRes(res){
-  var li = document.createElement("li");
-  li.className = "res" + (res.open ? " open" : "");
-  li.dataset.rid = res.id;
-  var trunk = document.createElement("div");
-  trunk.className = "trunk";
-  trunk.dataset.rid = res.id;
-  trunk.setAttribute("role", "button");
-  trunk.tabIndex = 0;
-  trunk.setAttribute("aria-expanded", String(res.open));
-  trunk.innerHTML =
-    '<span class="caret" aria-hidden="true">▸</span>' +
-    '<span class="res-name" title="' + esc(res.name) + '">' + esc(res.name) + '</span>' +
-    (res.cat && res.cat !== "自定义" ? '<span class="cat">' + esc(res.cat) + '</span>' : '') +
-    '<span class="per">' + labelOf(res) + '</span>' +
-    '<span class="summary"></span>' +
-    '<button class="btn del" aria-label="删除" title="删除该物质及所有岛的记录">×</button>';
-  var per = trunk.querySelector(".per");
-  if(res.kind !== "fixed"){
-    var b = bounds(res);
-    per.title = "每次记录都在这段范围里随机抽一个时刻：" + fmtMins(b[0]) + " ~ " + fmtMins(b[1]);
-  }
-  trunk.addEventListener("click", function(e){
-    if(e.target.closest("button")) return;
-    toggleRes(res.id);
-  });
-  trunk.addEventListener("keydown", function(e){
-    if(e.key === "Enter" || e.key === " "){
-      if(e.target.closest("button")) return;
-      e.preventDefault(); toggleRes(res.id);
-    }
-  });
-  trunk.querySelector(".del").addEventListener("click", function(){ delRes(res.id); });
-  li.appendChild(trunk);
-  if(res.open){
-    var wrap = document.createElement("div");
-    wrap.className = "branches";
-    for(var i = 0; i < ISLES; i++) wrap.appendChild(buildIsle(res, i));
-    li.appendChild(wrap);
-  }
-  return li;
-}
-function render(){
-  listEl.innerHTML = "";
-  var vis = visibleSorted();
-  for(var i = 0; i < vis.length; i++) listEl.appendChild(buildRes(vis[i]));
-  if(resources.length === 0){
-    emptyEl.hidden = false;
-    emptyEl.innerHTML = '还没有物质。点上面「＋ 添加物质」；<br>加好后点它的名字展开，在捡到它的那个岛点「记录刷新」。';
-  }else if(vis.length === 0){
-    emptyEl.hidden = false;
-    emptyEl.textContent = "「" + activeTab + "」里还没有物质，添加的时候分类选它就会来这里。";
-  }else{
-    emptyEl.hidden = true;
-  }
-  bannerText = "";
-  tick();
-}
-function byId(id){
-  for(var i = 0; i < resources.length; i++) if(resources[i].id === id) return resources[i];
-  return null;
-}
-function toggleRes(id){
-  var res = byId(id); if(!res) return;
-  res.open = !res.open;
-  save(); render();
-}
-function record(id, i){
-  var res = byId(id); if(!res) return;
-  var key = id + ":" + i;
-  res.starts[i] = Date.now();
-  rowState[key] = "run";
-  lastRound[key] = 0;
-  delete recentLoopAt[key];
-  save(); render();
-  unlockAudio();
-}
-function toggleIsleLoop(id, i){
-  var res = byId(id); if(!res) return;
-  if(effLoop(res, i)){
-    /* 关循环：把当前这一轮的起点冻结成锚点，时间轴从这继续走 */
-    var eff = effectiveStart(res, i, Date.now());
-    if(eff && eff.round > 0) res.starts[i] = eff.start;
-    res.loops[i] = false;
-  }else{
-    res.loops[i] = true;
-  }
-  loopCache = {}; lastRound = {}; recentLoopAt = {};
-  save(); render();
-}
-function clearIsle(id, i){
-  glassDialog("清空 " + (i + 1) + "岛 的计时？", function(){ clearIsleDo(id, i); });
-}
-function clearIsleDo(id, i){
-  var res = byId(id); if(!res) return;
-  var key = id + ":" + i;
-  res.starts[i] = null;
-  delete rowState[key];
-  delete loopCache[key];
-  delete lastRound[key];
-  delete recentLoopAt[key];
-  save(); render();
-}
-function dropKeys(prefix){
-  [rowState, loopCache, lastRound, recentLoopAt].forEach(function(m){
-    for(var k in m) if(k.indexOf(prefix) === 0) delete m[k];
-  });
-}
-function delRes(id){
-  var res = byId(id); if(!res) return;
-  glassDialog("删除「" + res.name + "」及它所有岛的记录？", function(){ delResDo(id); });
-}
-function delResDo(id){
-  var res = byId(id); if(!res) return;
-  resources = resources.filter(function(r){ return r.id !== id; });
-  dropKeys(id + ":");
-  save(); render();
-}
-
-/* ---------- 主循环 ---------- */
-var lastTickAt = Date.now();
-function tick(){
-  var now = Date.now();
-  var gap = now - lastTickAt;      /* 距上次刷新过去多久；很大说明App被挂起过 */
-  lastTickAt = now;
-  var dueAll = [], loopAll = [];
-  var alerts = [];   // [title, body] 只在"刚发生"那一刻提醒一次
-  var needExpand = [];
-  for(var r = 0; r < resources.length; r++){
-    var res = resources[r];
-    var dueIsles = [], recorded = 0, best = null;
-    for(var i = 0; i < ISLES; i++){
-      var key = res.id + ":" + i;
-      var looping = effLoop(res, i);
-      var eff = effectiveStart(res, i, now);
-      var st = eff ? isleStateAt(eff, now) : "idle";
-      var prev = rowState[key];
-      var label = res.name + "·" + (i + 1) + "岛";
-      var at = eff ? eff.start + eff.dur * 60000 : 0;   /* 这一轮抽中的刷出时刻 */
-      if(st !== "idle") recorded++;
-      if(st === "run"){
-        var rem = at - now;
-        if(!best || rem < best.rem) best = {isle: i, rem: rem};
-      }else if(st === "due"){ dueIsles.push(i); dueAll.push(label); }
-      if(booted && prev && prev !== st && st === "due"){
-        alerts.push(["该刷新了：" + label,
-                     "预计 " + fmtWhen(at) + " 刷出，去游戏里确认一下"]);
-        if(!res.open) needExpand.push(res.id);
-      }
-      /* 循环到点：替你把这一轮记上，马上开始下一轮（下一轮的时间重新随机抽） */
-      var lr = lastRound[key];
-      if(booted && looping && eff && lr !== undefined && eff.round > lr){
-        recentLoopAt[key] = now;
-        alerts.push(["循环自动记：" + label,
-                     "这轮到点，已自动记上、开始下一轮；下一轮预计 " +
-                     fmtWhen(eff.start + eff.dur * 60000) + " 刷"]);
-        if(!res.open) needExpand.push(res.id);
-      }
-      if(eff) lastRound[key] = eff.round; else delete lastRound[key];
-      if(recentLoopAt[key] !== undefined && now - recentLoopAt[key] > 120000) delete recentLoopAt[key];
-      if(recentLoopAt[key] !== undefined) loopAll.push(label);
-      rowState[key] = st;
-      var row = listEl.querySelector('.isle-row[data-rid="' + res.id + '"][data-isle="' + i + '"]');
-      if(row) patchIsle(row, res, i, st, now, eff);
-    }
-    var trunk = listEl.querySelector('.trunk[data-rid="' + res.id + '"]');
-    if(trunk) patchTrunk(trunk, res, dueIsles, recorded, best);
-  }
-  syncOrder();
-  if(alerts.length){
-    beep(); lastBeepAt = now;
-    for(var a = 0; a < alerts.length; a++) notify(alerts[a][0], alerts[a][1]);
-  }
-  if(needExpand.length){
-    for(var n = 0; n < needExpand.length; n++){ var rr = byId(needExpand[n]); if(rr) rr.open = true; }
-    save(); render();
-    return;
-  }
-  if(booted && dueAll.length && (lastBeepAt === 0 || Date.now() - lastBeepAt > 60000)){
-    beep(); lastBeepAt = Date.now();
-  }
-  updateBanner(dueAll, loopAll);
-  flashTitle(dueAll.length > 0);
-  if(gap > 3000){ render(); }
-}
-function patchIsle(row, res, i, st, now, eff){
-  row.classList.toggle("idle", st === "idle");
-  row.classList.toggle("run", st === "run");
-  row.classList.toggle("due", st === "due");
-  row.classList.toggle("has-rec", st !== "idle");
-  var tone = (st === "run" && eff) ? toneOf(eff.start + eff.dur * 60000 - now) : "";
-  row.classList.toggle("t-yellow", tone === "yellow");
-  row.classList.toggle("t-red", tone === "red");
-  var clock = row.querySelector(".clock"), nextEl = row.querySelector(".next"), recAt = row.querySelector(".rec-at");
-  if(st === "idle" || !eff){
-    clock.textContent = "--:--";
-    nextEl.textContent = "";
-    recAt.textContent = "";
-    recAt.title = "";
-    return;
-  }
-  var at = eff.start + eff.dur * 60000;   /* 这一轮抽中的刷出时刻 */
-  if(st === "run"){
-    clock.textContent = fmtRemain(at - now);
-    nextEl.textContent = "预计 " + fmtWhen(at) + " 刷";
-    var pct = (now - eff.start) / (eff.dur * 60000) * 100;
-    row.querySelector(".bar i").style.width = Math.min(100, Math.max(0, pct)).toFixed(1) + "%";
-  }else{
-    clock.textContent = "该刷新了";
-    nextEl.textContent = "预计 " + fmtWhen(at) + " · 已过 " + fmtOver(now - at);
-    row.querySelector(".bar i").style.width = "100%";
-  }
-  var looping = effLoop(res, i);
-  recAt.textContent = fmtShortClock(eff.start) + (looping && eff.round > 0 ? " 自动" : " 记");
-  recAt.title = looping && eff.round > 0 ? "第 " + (eff.round + 1) + " 轮（倒计时到点后自动开始的）" : "";
-}
-function patchTrunk(trunk, res, dueIsles, recorded, best){
-  var el = trunk.querySelector(".summary");
-  var text, cls = "";
-  if(dueIsles.length){
-    text = dueIsles.map(function(i){ return (i + 1) + "岛"; }).join("、") + " 该刷新了";
-    cls = "due";
-  }else if(best){
-    text = "已记 " + recorded + " 岛 · 最近 " + (best.isle + 1) + "岛 " + fmtRemain(best.rem) + " 后";
-    cls = "t-" + toneOf(best.rem);
-  }else{
-    text = "还没记录，点开选岛";
-  }
-  el.textContent = text;
-  el.className = "summary" + (cls ? " " + cls : "");
-}
-function updateBanner(dueLabels, loopLabels){
-  var parts = [];
-  if(loopLabels && loopLabels.length) parts.push("已自动记刷新：<b>" + esc(loopLabels.join("、")) + "</b>");
-  if(dueLabels.length) parts.push("该刷新了：<b>" + esc(dueLabels.join("、")) + "</b>");
-  var t = parts.join("　");
-  if(t === bannerText) return;
-  bannerText = t;
-  if(!t){ bannerEl.hidden = true; return; }
-  bannerEl.hidden = false;
-  bannerEl.innerHTML = t + "　去游戏里看一眼，回来点「记录刷新」。";
-}
-function flashTitle(anyAlert){
-  if(!anyAlert){
-    if(titleTimer){ clearInterval(titleTimer); titleTimer = null; }
-    document.title = "创魔工具箱";
-    return;
-  }
-  if(titleTimer) return;
-  titleTick = 0;
-  titleTimer = setInterval(function(){
-    titleTick++;
-    document.title = (titleTick % 2) ? "【该刷新了】创魔工具箱" : "创魔工具箱";
-  }, 1200);
-}
-
-/* ---------- 保存 ---------- */
 function showErr(msg){ addErr.textContent = msg; addErr.hidden = false; }
 function hideErr(){ addErr.hidden = true; }
 function readTime(valEl, unitName){
@@ -1133,55 +2593,64 @@ function readTime(valEl, unitName){
   if(isNaN(v)) return 0;
   return Math.round(v * UNIT_MINS[unitOf(unitName)]);
 }
-function readFluc(){
-  if(!sFluc.checked) return null;
-  var fv = parseFloat(sFlucVal.value);
-  if(isNaN(fv)) fv = 0;
-  var fu = unitOf("funit");
-  if(fu === "pct"){
-    if(fv < 1 || fv > 90) return {err: "波动百分比填 1 ~ 90 之间"};
-    return {mode: "pct", val: Math.round(fv)};
-  }
-  var amp = Math.round(fv * UNIT_MINS[fu]);
-  if(amp <= 0) return {err: "波动时间要大于 0"};
-  return {mode: "abs", val: amp};
-}
+
 function add(){
-  var name = sName.value.trim();
-  if(!name){ showErr("先给物质起个名字"); sName.focus(); return; }
-  var fluc = readFluc();
-  if(fluc && fluc.err){ showErr(fluc.err); sFlucVal.focus(); return; }
+  var catVal = sCat.value;
+  var subVal = "";
+  if(catVal && catVal !== "自定义"){
+    if(sSubCatSel.value === "__NEW__"){
+      subVal = sSubCatNew.value.trim();
+      if(!subVal){ showErr("请先填写新建的小类（物品）名称"); sSubCatNew.focus(); return; }
+      var map = currentSubCatsMap();
+      if(!Array.isArray(map[catVal])) map[catVal] = [];
+      if(map[catVal].indexOf(subVal) < 0) map[catVal].push(subVal);
+    }else{
+      subVal = sSubCatSel.value || "";
+    }
+  }
+
+  var name = sName.value.trim() || subVal;
+  if(!name){
+    showErr("请选择二级小类，或填写物质名称");
+    sName.focus();
+    return;
+  }
+
   var res;
   if(sRange.checked){
     var early = readTime(sEarly, "eunit");
     var late  = readTime(sLate, "lunit");
-    if(early <= 0){ showErr("最快时间要大于 0"); sEarly.focus(); return; }
-    if(late < early){ showErr("最慢时间不能比最快短"); sLate.focus(); return; }
-    res = {kind: "range", base: late, pct: 10, early: early, late: late, fluc: fluc};
+    if(early <= 0){ showErr("最早刷出时间要大于 0"); sEarly.focus(); return; }
+    if(late < early){ showErr("最晚必刷时间不能比最早时间短"); sLate.focus(); return; }
+    res = {kind: "range", base: late, early: early, late: late};
   }else{
     var base = readTime(sTime, "unit");
-    if(base <= 0){ showErr("刷新时间要大于 0，比如 30 分钟"); sTime.focus(); return; }
-    if(fluc && fluc.mode === "pct"){
-      res = {kind: "pct", base: base, pct: fluc.val, early: base, late: base};
-    }else if(fluc){
-      res = {kind: "abs", base: base, amp: fluc.val, early: base, late: base};
-    }else{
-      res = {kind: "fixed", base: base, pct: 10, early: base, late: base};
-    }
+    if(base <= 0){ showErr("刷新时间要大于 0"); sTime.focus(); return; }
+    res = {kind: "range", base: base, early: base, late: base};
   }
   hideErr();
   res.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   res.name = name;
-  res.cat = sCat.value;
+  res.cat = catVal;
+  res.subcat = subVal;
   res.open = true;
   res.loop = sLoop.checked;
   res.loops = new Array(ISLES).fill(null);
   res.starts = new Array(ISLES).fill(null);
-  resources.unshift(res);
-  save(); render();
+  res.customEnd = new Array(ISLES).fill(null);
+
+  currentResources().unshift(res);
+  if(catVal && catVal !== "自定义" && subVal){
+    activeTab = catVal;
+    activeSubTab = subVal;
+  }
+  saveActive();
+  renderTabs();
+  render();
   closeSheet();
   unlockAudio();
 }
+
 addBtn.addEventListener("click", openSheet);
 $("#saveBtn").addEventListener("click", add);
 $("#cancelBtn").addEventListener("click", closeSheet);
@@ -1192,33 +2661,601 @@ sheetEl.addEventListener("keydown", function(e){
   }
   if(e.key === "Escape") closeSheet();
 });
+
+/* 模式切换与团队云同步逻辑 */
+var teamCard = $("#teamCard");
+var tabModeLocal = $("#tabModeLocal");
+var tabModeTeam = $("#tabModeTeam");
+var modeBadge = $("#modeBadge");
+
+function applyModeUI(){
+  if(currentMode === "team"){
+    tabModeLocal.className = "mode-tab";
+    tabModeTeam.className = "mode-tab on";
+    modeBadge.className = "badge-mode team";
+    modeBadge.textContent = "小队";
+    teamCard.hidden = false;
+  }else{
+    tabModeLocal.className = "mode-tab on";
+    tabModeTeam.className = "mode-tab";
+    modeBadge.className = "badge-mode";
+    modeBadge.textContent = "本地";
+    teamCard.hidden = true;
+  }
+  activeTab = currentMode === "team" ? teamData.tab : localData.tab;
+  activeSubTab = currentMode === "team" ? teamData.subTab : localData.subTab;
+  renderTabs();
+  render();
+}
+
+tabModeLocal.addEventListener("click", function(){
+  if(currentMode === "local") return;
+  currentMode = "local";
+  saveActive(true);
+  applyModeUI();
+  showToast("已切换到个人本地模式");
+});
+
+tabModeTeam.addEventListener("click", function(){
+  if(currentMode === "team") return;
+  currentMode = "team";
+  saveActive(true);
+  applyModeUI();
+  showToast("已切换到小队联机模式");
+  if(activeSquad) pullLatestFromRoom(true);
+});
+
+function packStatePayload(includeRoom, store, withImgs){
+  store = store || teamData;
+  var payload = {
+    v: 3,
+    t: store.updatedAt || Date.now(),
+    s: clientId,
+    rm: includeRoom ? (store.roomCode || "") : undefined,
+    c: store.allCats,
+    sc: store.subCatsMap,
+    si: withImgs ? (store.subImgs || {}) : undefined,
+    r: store.resources.map(function(x){
+      return {
+        id: x.id, name: x.name, cat: x.cat, subcat: x.subcat || "", kind: x.kind,
+        base: x.base, early: x.early, late: x.late,
+        loop: x.loop, loops: x.loops, open: x.open,
+        starts: x.starts, customEnd: x.customEnd
+      };
+    })
+  };
+  return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+}
+
+function decodeToken(rawInput){
+  try{
+    var clean = rawInput.trim();
+    var tokenMatch = clean.match(/CZMF-([A-Za-z0-9+/=]+)/);
+    if(tokenMatch){
+      clean = tokenMatch[1];
+    }else if(clean.indexOf("CZMF-") === 0){
+      clean = clean.slice(5);
+    }
+    var obj = JSON.parse(decodeURIComponent(escape(atob(clean))));
+    if(!obj) return null;
+    if(!Array.isArray(obj.r) && !(obj.img && typeof obj.img.k === "string")) return null;
+    return obj;
+  }catch(e){ return null; }
+}
+
+function applyObjToStore(obj, store){
+  if(Array.isArray(obj.c)){
+    store.allCats = obj.c.filter(function(c){ return typeof c === "string" && c.trim() && c !== "全部"; });
+  }
+  if(obj.sc && typeof obj.sc === "object") store.subCatsMap = obj.sc;
+  store.resources = normalizeResources(obj.r);
+  if(obj.si && typeof obj.si === "object") store.subImgs = cleanImgs(obj.si);
+  if(!store.subImgs) store.subImgs = {};
+  ensureSubCatsRegistered(store);
+  store.updatedAt = obj.t || Date.now();
+  loopCache = {};
+}
+
+/* 小队实时同步：把消息应用到指定小队的数据里 */
+function unpackAndApplyState(rawInput, isLiveRoom, target, code){
+  try{
+    target = target || teamData;
+    var obj = decodeToken(rawInput);
+    if(!obj) return false;
+    if(isLiveRoom && obj.s === clientId) return false;
+
+    var isActive = (target === teamData);
+    if(obj.img){
+      if(!target.subImgs) target.subImgs = {};
+      var dImg = obj.img.d;
+      if(typeof dImg === "string" && dImg.indexOf("data:image/") === 0 && dImg.length < 40000) target.subImgs[obj.img.k] = dImg;
+      else delete target.subImgs[obj.img.k];
+      if(isActive && currentMode === "team"){
+        saveActive(true);
+        if(!subGuideEl.hidden) renderSubGuide();
+      }else{
+        saveSquads();
+      }
+      return true;
+    }
+
+    applyObjToStore(obj, target);
+
+    if(isActive && currentMode === "team"){
+      saveActive(true);
+      renderTabs();
+      render();
+    }else{
+      saveSquads();
+    }
+    if(isActive){
+      var nowStr = p2(new Date().getHours()) + ":" + p2(new Date().getMinutes()) + ":" + p2(new Date().getSeconds());
+      $("#lastSyncInfo").textContent = "已同步小队最新时间 (" + nowStr + ")";
+    }
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+function topicForRoom(code){
+  var h1 = 0x811c9dc5, h2 = 0x1b873593;
+  var str = "czmf_private_room_2026_" + code.trim();
+  for(var i = 0; i < str.length; i++){
+    var c = str.charCodeAt(i);
+    h1 ^= c; h1 = Math.imul(h1, 0x01000193);
+    h2 ^= c; h2 = Math.imul(h2, 0x85ebca6b);
+  }
+  return "czmf_team_" + (h1 >>> 0).toString(36) + "_" + (h2 >>> 0).toString(36);
+}
+
+function renderSquadList(){
+  var box = $("#squadList");
+  if(!box) return;
+  box.innerHTML = "";
+  squads.forEach(function(q){
+    var chip = document.createElement("span");
+    chip.className = "squad-chip" + (q.code === activeSquad ? " on" : "");
+    chip.appendChild(document.createTextNode(q.code));
+    var x = document.createElement("button");
+    x.type = "button"; x.className = "sq-x"; x.textContent = "×"; x.title = "断开这个小队";
+    x.addEventListener("click", function(ev){ ev.stopPropagation(); disconnectRoom(false, q.code); });
+    chip.appendChild(x);
+    chip.addEventListener("click", function(){ switchSquad(q.code); });
+    box.appendChild(chip);
+  });
+}
+
+function updateRoomUI(){
+  var dot = $("#syncDot"), stText = $("#syncStatusText"),
+      pullBtn = $("#pullNowBtn"), pushBtn = $("#pushNowBtn"), leaveBtn = $("#leaveRoomBtn");
+  renderSquadList();
+  if(!activeSquad){
+    dot.className = "dot";
+    stText.textContent = "未连接小队";
+    pullBtn.hidden = true;
+    pushBtn.hidden = true;
+    leaveBtn.hidden = true;
+    return;
+  }
+  pullBtn.hidden = false;
+  pushBtn.hidden = false;
+  leaveBtn.hidden = false;
+  var c = conns[activeSquad];
+  var suffix = "（" + squads.length + "/" + MAX_SQUADS + "）";
+  if(c && c.status === "live"){
+    dot.className = "dot live";
+    stText.textContent = (c.msg || ("已连：" + activeSquad)) + suffix;
+  }else{
+    dot.className = "dot wait";
+    stText.textContent = ((c && c.msg) || ("连接中：" + activeSquad)) + suffix;
+  }
+}
+
+function pullLatestFromRoom(silent, code){
+  code = code || activeSquad;
+  var sq = squadByCode(code);
+  if(!sq) return;
+  var topic = topicForRoom(code);
+  fetch("https://ntfy.sh/" + topic + "/json?poll=1&since=12h")
+    .then(function(res){ return res.text(); })
+    .then(function(txt){
+      var lines = txt.trim().split("\n");
+      var stateDone = false, seenImg = {};
+      for(var i = lines.length - 1; i >= 0; i--){
+        if(!lines[i]) continue;
+        try{
+          var item = JSON.parse(lines[i]);
+          if(item && item.event === "message" && item.message){
+            var po = decodeToken(item.message);
+            if(!po) continue;
+            if(po.img){
+              if(seenImg[po.img.k]) continue;
+              seenImg[po.img.k] = 1;
+              unpackAndApplyState(item.message, false, sq.data, code);
+            }else if(!stateDone){
+              stateDone = true;
+              if(unpackAndApplyState(item.message, false, sq.data, code)){
+                if(!silent) showToast("已拉取小队最新刷新表");
+              }
+            }
+          }
+        }catch(e){}
+      }
+    }).catch(function(){});
+}
+
+function closeConn(code){
+  var c = conns[code];
+  if(!c) return;
+  if(c.es){ try{ c.es.close(); }catch(e){} }
+  if(c.bc){ try{ c.bc.close(); }catch(e){} }
+  delete conns[code];
+}
+
+function openConn(code){
+  closeConn(code);
+  var sq = squadByCode(code);
+  if(!sq) return;
+  var c = conns[code] = {es: null, bc: null, status: "wait", msg: ""};
+  var topic = topicForRoom(code);
+  try{
+    if("BroadcastChannel" in window){
+      c.bc = new BroadcastChannel(topic);
+      c.bc.onmessage = function(ev){
+        if(ev.data && unpackAndApplyState(ev.data, true, sq.data, code)){
+          if(currentMode === "team" && code === activeSquad) showToast("队友更新了刷新时间");
+        }
+      };
+    }
+  }catch(e){}
+
+  try{
+    c.es = new EventSource("https://ntfy.sh/" + topic + "/sse");
+    c.es.onopen = function(){
+      c.status = "live"; c.msg = "";
+      updateRoomUI();
+      if(code === activeSquad) $("#lastSyncInfo").textContent = "小队频道在线";
+    };
+    c.es.onmessage = function(ev){
+      try{
+        var data = JSON.parse(ev.data);
+        if(data && data.event === "message" && data.message){
+          if(unpackAndApplyState(data.message, true, sq.data, code)){
+            if(currentMode === "team" && code === activeSquad) showToast("已同步队友的操作");
+          }
+        }
+      }catch(err){}
+    };
+    c.es.onerror = function(){
+      c.status = "wait"; c.msg = "重连中...";
+      updateRoomUI();
+    };
+  }catch(e){
+    c.status = "wait"; c.msg = "请用口令码同步";
+  }
+}
+
+function switchSquad(code){
+  var sq = squadByCode(code);
+  if(!sq) return;
+  if(currentMode === "team" && activeSquad){
+    teamData.tab = activeTab;
+    teamData.subTab = activeSubTab;
+  }
+  activeSquad = code;
+  teamData = sq.data;
+  teamData.roomCode = code;
+  $("#roomCodeInp").value = code;
+  saveSquads();
+  if(currentMode === "team"){
+    activeTab = teamData.tab;
+    activeSubTab = teamData.subTab;
+    if(tabsList().indexOf(activeTab) < 0){ activeTab = "全部"; activeSubTab = ""; }
+    renderTabs();
+    render();
+  }
+  updateRoomUI();
+}
+
+function connectRoom(code, skipInitialPull){
+  code = (code || "").trim();
+  if(!code){ showToast("请先输入小队暗号"); return; }
+  var exist = squadByCode(code);
+  if(exist){
+    if(!conns[code]) openConn(code);
+    switchSquad(code);
+    if(!skipInitialPull) pullLatestFromRoom(true, code);
+    showToast("已切换到小队：" + code);
+    return;
+  }
+  if(squads.length >= MAX_SQUADS){
+    showToast("最多同时加入" + MAX_SQUADS + "个小队，请先断开一个");
+    return;
+  }
+  var data;
+  if(squads.length === 0){
+    data = teamData; // 第一个小队沿用当前小队页里已有的内容
+  }else{
+    data = normalizeStore({});
+  }
+  data.roomCode = code;
+  squads.push({code: code, data: data});
+  switchSquad(code);
+  openConn(code);
+  if(!skipInitialPull) pullLatestFromRoom(true, code);
+}
+
+function disconnectRoom(silent, code){
+  code = code || activeSquad;
+  var sq = squadByCode(code);
+  if(!sq) return;
+  closeConn(code);
+  squads = squads.filter(function(q){ return q.code !== code; });
+  if(code === activeSquad){
+    if(squads.length){
+      activeSquad = "";
+      switchSquad(squads[0].code);
+    }else{
+      activeSquad = "";
+      teamData = sq.data;
+      teamData.roomCode = "";
+      saveSquads();
+      try{ localStorage.setItem(KEY_TEAM, JSON.stringify(teamData)); }catch(e){}
+      if(currentMode === "team"){ renderTabs(); render(); }
+    }
+  }else{
+    saveSquads();
+  }
+  updateRoomUI();
+  $("#lastSyncInfo").textContent = squads.length ? "输入相同暗号即可同屏（最多同时加入5个小队）" : "未连接小队频道";
+  if(!silent) showToast("已断开小队：" + code);
+}
+
+function broadcastChange(){
+  if(currentMode !== "team" || !activeSquad) return;
+  var code = activeSquad, store = teamData;
+  clearTimeout(syncDebounce);
+  syncDebounce = setTimeout(function(){
+    var packed = packStatePayload(true, store);
+    var c = conns[code];
+    if(c && c.bc){ try{ c.bc.postMessage(packed); }catch(e){} }
+    var topic = topicForRoom(code);
+    fetch("https://ntfy.sh/" + topic, { method: "POST", body: packed }).catch(function(){});
+  }, 200);
+}
+
+$("#joinRoomBtn").addEventListener("click", function(){
+  connectRoom($("#roomCodeInp").value, false);
+});
+$("#genRoomBtn").addEventListener("click", function(){
+  if(squads.length >= MAX_SQUADS){ showToast("最多同时加入" + MAX_SQUADS + "个小队，请先断开一个"); return; }
+  var rand = "cm" + Math.random().toString(36).slice(2, 7);
+  $("#roomCodeInp").value = rand;
+  connectRoom(rand, true);
+  broadcastChange();
+  pushAllImages();
+  showToast("已创建并连接暗号：" + rand);
+});
+$("#leaveRoomBtn").addEventListener("click", function(){ disconnectRoom(false); });
+$("#pullNowBtn").addEventListener("click", function(){ pullLatestFromRoom(false); });
+$("#pushNowBtn").addEventListener("click", function(){
+  broadcastChange();
+  pushAllImages();
+  showToast("已推送给队友！");
+});
+
+function copyText(str, okMsg){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(str).then(function(){ showToast(okMsg); }).catch(function(){ fallbackCopy(str, okMsg); });
+  }else{
+    fallbackCopy(str, okMsg);
+  }
+}
+function fallbackCopy(str, okMsg){
+  var ta = document.createElement("textarea");
+  ta.value = str;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand("copy"); showToast(okMsg); }catch(e){ showToast("复制失败"); }
+  document.body.removeChild(ta);
+}
+
+$("#exportCodeBtn").addEventListener("click", function(){
+  var token = "【创魔刷新表口令】复制整条消息到App导入即可同步我的本地计时器：CZMF-" + packStatePayload(false, localData, true);
+  copyText(token, "已复制本地计时器口令码！发给别人粘贴即可");
+});
+
+$("#importCodeBtn").addEventListener("click", function(){
+  var val = $("#importCodeInp").value.trim();
+  if(!val){ showToast("请先粘贴口令码"); return; }
+  var obj = decodeToken(val);
+  if(!obj || !Array.isArray(obj.r)){ showToast("口令码格式不正确"); return; }
+  applyObjToStore(obj, localData);
+  try{ localStorage.setItem(KEY_LOCAL, JSON.stringify(localData)); }catch(e){}
+  $("#importCodeInp").value = "";
+  if(currentMode === "local"){
+    if(tabsList().indexOf(activeTab) < 0){ activeTab = "全部"; activeSubTab = ""; }
+    renderTabs();
+    render();
+    saveActive(true);
+    showToast("导入成功！已导入到本地计时器");
+  }else{
+    showToast("导入成功！已导入到本地计时器（切到“本地”查看）");
+  }
+});
+
 document.addEventListener("pointerdown", function(){ unlockAudio(); }, {once: true});
-/* 回到前台/唤醒时，立即按系统时间重算（安卓WebView不一定触发visibilitychange，所以多监听几个） */
-function resumeSync(){ tick(); }
+
+/* ---------- 悬浮快记球与直接输入栏小窗（含上下自适应防越界定位） ---------- */
+var fabBall = $("#fabBall");
+var quickFloat = $("#quickFloat");
+var qfModeTag = $("#qfModeTag");
+var qfSmartInp = $("#qfSmartInp"), qfSmartSubmit = $("#qfSmartSubmit");
+
+function syncQuickFloat(){
+  if(!quickFloat) return;
+  qfModeTag.textContent = currentMode === "team" ? "小队" : "本地";
+  var list = currentResources();
+  if(list.length > 0 && !byId(qfSelectedResId)){
+    qfSelectedResId = list[0].id;
+  }
+}
+
+$("#qfSmartEx").querySelectorAll(".chip").forEach(function(chip){
+  chip.addEventListener("click", function(){
+    qfSmartInp.value = (qfSmartInp.value + (chip.dataset.fill || "")).trimStart();
+    qfSmartInp.focus();
+  });
+});
+
+qfSmartSubmit.addEventListener("click", function(){
+  triggerSmartInput(qfSmartInp);
+});
+qfSmartInp.addEventListener("keydown", function(e){
+  if(e.key === "Enter"){
+    e.preventDefault();
+    triggerSmartInput(qfSmartInp);
+  }
+});
+
+function positionQuickFloat(){
+  if(!quickFloat || quickFloat.hidden) return;
+  var ballRect = fabBall.getBoundingClientRect();
+  var qfW = quickFloat.offsetWidth || 300;
+  var qfH = quickFloat.offsetHeight || 168;
+  var vw = window.innerWidth;
+  var vh = window.innerHeight;
+  var pad = 12;
+
+  // 水平方向：靠近悬浮球所在侧，并严格限制在屏幕内
+  var left;
+  if(ballRect.left + ballRect.width / 2 < vw / 2){
+    left = Math.max(pad, ballRect.left);
+  }else{
+    left = Math.min(vw - qfW - pad, ballRect.right - qfW);
+  }
+  left = Math.max(pad, Math.min(vw - qfW - pad, left));
+
+  // 垂直方向：若悬浮球偏屏幕上半部分，弹窗向下展开；偏下半部分则向上展开，绝不遮挡顶部关闭按钮
+  var top;
+  if(ballRect.top < qfH + 24){
+    top = ballRect.bottom + 10;
+  }else{
+    top = ballRect.top - qfH - 10;
+  }
+  top = Math.max(pad, Math.min(vh - qfH - pad, top));
+
+  quickFloat.style.right = "auto";
+  quickFloat.style.bottom = "auto";
+  quickFloat.style.left = Math.round(left) + "px";
+  quickFloat.style.top = Math.round(top) + "px";
+}
+
+function toggleQuickFloat(forceOpen){
+  var willOpen = (typeof forceOpen === "boolean") ? forceOpen : quickFloat.hidden;
+  quickFloat.hidden = !willOpen;
+  fabBall.classList.toggle("open", willOpen);
+  if(willOpen){
+    syncQuickFloat();
+    positionQuickFloat();
+    setTimeout(function(){
+      positionQuickFloat();
+      qfSmartInp.focus();
+    }, 20);
+  }
+}
+
+$("#qfCloseBtn").addEventListener("click", function(){ toggleQuickFloat(false); });
+window.addEventListener("resize", positionQuickFloat);
+
+/* 悬浮球拖拽与点击判别（支持触摸与鼠标） */
+(function initFabDrag(){
+  var dragging = false, moved = false, startX = 0, startY = 0, origRight = 14, origBottom = 76;
+  fabBall.addEventListener("pointerdown", function(e){
+    dragging = true;
+    moved = false;
+    startX = e.clientX;
+    startY = e.clientY;
+    var rect = fabBall.getBoundingClientRect();
+    origRight = window.innerWidth - rect.right;
+    origBottom = window.innerHeight - rect.bottom;
+    fabBall.setPointerCapture(e.pointerId);
+  });
+  fabBall.addEventListener("pointermove", function(e){
+    if(!dragging) return;
+    var dx = e.clientX - startX;
+    var dy = e.clientY - startY;
+    if(Math.abs(dx) > 6 || Math.abs(dy) > 6) moved = true;
+    if(!moved) return;
+    var newRight = Math.min(window.innerWidth - 62, Math.max(10, origRight - dx));
+    var newBottom = Math.min(window.innerHeight - 62, Math.max(12, origBottom - dy));
+    fabBall.style.right = newRight + "px";
+    fabBall.style.bottom = newBottom + "px";
+    if(!quickFloat.hidden) positionQuickFloat();
+  });
+  fabBall.addEventListener("pointerup", function(e){
+    if(!dragging) return;
+    dragging = false;
+    try{ fabBall.releasePointerCapture(e.pointerId); }catch(err){}
+    if(!moved){
+      toggleQuickFloat();
+    }else{
+      var rect = fabBall.getBoundingClientRect();
+      var snapRight = (rect.left + rect.width / 2 < window.innerWidth / 2) ? (window.innerWidth - 62) : 14;
+      fabBall.style.right = snapRight + "px";
+      if(!quickFloat.hidden) positionQuickFloat();
+    }
+  });
+})();
+
+function resumeSync(){
+  tick();
+  squads.forEach(function(q){
+    pullLatestFromRoom(true, q.code);
+    var c = conns[q.code];
+    if(!c || !c.es || c.es.readyState === 2) openConn(q.code);
+  });
+}
 document.addEventListener("visibilitychange", function(){ if(!document.hidden) resumeSync(); });
 window.addEventListener("focus", resumeSync);
 window.addEventListener("pageshow", resumeSync);
 window.addEventListener("online", resumeSync);
 document.addEventListener("resume", resumeSync);
 
-/* ---------- 启动 ---------- */
-load();
+loadAll();
 updateSoundBtn();
 updateNotifyBtn();
-renderTabs();
+applyModeUI();
+
+squads.forEach(function(q){
+  openConn(q.code);
+  pullLatestFromRoom(true, q.code);
+});
+if(activeSquad) $("#roomCodeInp").value = activeSquad;
+updateRoomUI();
+
 var now0 = Date.now();
 var alertOnLoad = false;
-for(var r = 0; r < resources.length; r++){
+var initResList = currentResources();
+for(var r = 0; r < initResList.length; r++){
   var any = false;
   for(var i = 0; i < ISLES; i++){
-    var key0 = resources[r].id + ":" + i;
-    var eff0 = effectiveStart(resources[r], i, now0);
+    var key0 = initResList[r].id + ":" + i;
+    var eff0 = effectiveStart(initResList[r], i, now0);
     var st0 = eff0 ? isleStateAt(eff0, now0) : "idle";
     rowState[key0] = st0;
+    if(eff0){
+      var wb0 = key0 + ":" + eff0.start;
+      if(st0 === "run" && (eff0.hasWin ? eff0.winStart : eff0.end) - now0 <= 300000) warned[wb0 + ":a"] = 1;
+      if(st0 === "win" && eff0.end - now0 <= 300000) warned[wb0 + ":b"] = 1;
+    }
     if(eff0) lastRound[key0] = eff0.round; else delete lastRound[key0];
     if(st0 === "due"){ any = true; alertOnLoad = true; }
   }
-  if(any) resources[r].open = true;
+  if(any) initResList[r].open = true;
 }
 render();
 booted = true;
@@ -1227,514 +3264,6 @@ if(alertOnLoad){
   setTimeout(function(){ beep(); lastBeepAt = Date.now(); }, 700);
 }
 setInterval(tick, 500);
-})();
-
-</script>
-
-<script>
-(function(){
-
-/* ---------- 棋盘编辑 ---------- */
-const N = 8;
-let boardActive = []; // [r][c] bool
-function diamondPreset(){
-  const rows = {0:[3,4],1:[2,3,4,5],2:[1,2,3,4,5,6],3:[0,1,2,3,4,5,6,7],
-                4:[0,1,2,3,4,5,6,7],5:[1,2,3,4,5,6],6:[2,3,4,5],7:[3,4]};
-  const b = [];
-  for(let r=0;r<N;r++){
-    b.push([]);
-    for(let c=0;c<N;c++) b[r].push(rows[r] && rows[r].includes(c));
-  }
-  return b;
-}
-boardActive = diamondPreset();
-
-const boardEditEl = document.getElementById('boardEdit');
-function renderBoardEdit(){
-  boardEditEl.innerHTML='';
-  for(let r=0;r<N;r++) for(let c=0;c<N;c++){
-    const d=document.createElement('div');
-    d.className='cell '+(boardActive[r][c]?'on':'off');
-    d.addEventListener('click',()=>{ boardActive[r][c]=!boardActive[r][c]; renderBoardEdit(); });
-    boardEditEl.appendChild(d);
-  }
-}
-renderBoardEdit();
-document.getElementById('resetDiamond').onclick=()=>{ boardActive=diamondPreset(); renderBoardEdit(); };
-document.getElementById('clearBoard').onclick=()=>{ boardActive=Array.from({length:N},()=>Array(N).fill(false)); renderBoardEdit(); };
-document.getElementById('fillBoard').onclick=()=>{ boardActive=Array.from({length:N},()=>Array(N).fill(true)); renderBoardEdit(); };
-
-/* ---------- 方块编辑 ---------- */
-const COLORS = ['#bd93f9','#3ca0e1','#46d278','#ffcf40','#ff8fa3','#ff9f40'];
-let pickColor = COLORS[0];
-const colorPickerEl = document.getElementById('colorPicker');
-COLORS.forEach((col,i)=>{
-  const s=document.createElement('div');
-  s.className='swatch'+(i===0?' sel':'');
-  s.style.background=col;
-  s.onclick=()=>{ pickColor=col;
-    [...colorPickerEl.children].forEach(x=>x.classList.remove('sel'));
-    s.classList.add('sel');
-    document.documentElement.style.setProperty('--pickColor',col);
-    renderMini();
-  };
-  colorPickerEl.appendChild(s);
-});
-document.documentElement.style.setProperty('--pickColor',pickColor);
-
-let miniGrid = Array.from({length:4},()=>Array(4).fill(false));
-const pieceEditEl = document.getElementById('pieceEdit');
-function renderMini(){
-  pieceEditEl.innerHTML='';
-  for(let r=0;r<4;r++) for(let c=0;c<4;c++){
-    const d=document.createElement('div');
-    d.className='c'+(miniGrid[r][c]?' on':'');
-    if(miniGrid[r][c]) d.style.background=pickColor;
-    d.addEventListener('click',()=>{ miniGrid[r][c]=!miniGrid[r][c]; renderMini(); });
-    pieceEditEl.appendChild(d);
-  }
-}
-renderMini();
-document.getElementById('clearMini').onclick=()=>{ miniGrid=Array.from({length:4},()=>Array(4).fill(false)); renderMini(); };
-
-let pieces = []; // {id,name,cells:[[r,c],...] normalized, color}
-let pieceCounter = 0;
-function normalizeCells(cellsArr){
-  const minr=Math.min(...cellsArr.map(p=>p[0]));
-  const minc=Math.min(...cellsArr.map(p=>p[1]));
-  return cellsArr.map(p=>[p[0]-minr,p[1]-minc]);
-}
-document.getElementById('addPiece').onclick=()=>{
-  const cells=[];
-  for(let r=0;r<4;r++) for(let c=0;c<4;c++) if(miniGrid[r][c]) cells.push([r,c]);
-  if(cells.length!==4){ glassDialog('请画出一个正好4格的形状（四连方块）', null, true); return; }
-  pieceCounter++;
-  pieces.push({id:pieceCounter, name:'#'+pieceCounter, cells:normalizeCells(cells), color:pickColor});
-  miniGrid=Array.from({length:4},()=>Array(4).fill(false));
-  renderMini();
-  renderPieceList();
-};
-function renderPieceList(){
-  const el=document.getElementById('pieceList');
-  el.innerHTML='';
-  pieces.forEach(p=>{
-    const card=document.createElement('div');
-    card.className='pieceCard';
-    const mini=document.createElement('div');
-    mini.className='mini';
-    const minr=Math.min(...p.cells.map(x=>x[0])), maxr=Math.max(...p.cells.map(x=>x[0]));
-    const minc=Math.min(...p.cells.map(x=>x[1])), maxc=Math.max(...p.cells.map(x=>x[1]));
-    for(let r=0;r<4;r++) for(let c=0;c<4;c++){
-      const on = p.cells.some(x=>x[0]===r&&x[1]===c);
-      const dd=document.createElement('div');
-      dd.className=on?'':'off';
-      if(on) dd.style.background=p.color;
-      mini.appendChild(dd);
-    }
-    card.appendChild(mini);
-    const lab=document.createElement('div');
-    lab.textContent=p.name;
-    card.appendChild(lab);
-    const del=document.createElement('button');
-    del.className='small danger';
-    del.textContent='删除';
-    del.style.marginTop='4px';
-    del.style.width='100%';
-    del.onclick=()=>{ pieces=pieces.filter(x=>x.id!==p.id); renderPieceList(); };
-    card.appendChild(del);
-    el.appendChild(card);
-  });
-}
-
-/* ---------- 求解算法 ---------- */
-function cellKey(r,c){return r+','+c;}
-
-function getBoardCells(){
-  const cells=[];
-  for(let r=0;r<N;r++) for(let c=0;c<N;c++) if(boardActive[r][c]) cells.push([r,c]);
-  return cells;
-}
-function getPlacements(piece, boardSet){
-  const plc=[];
-  const maxR=Math.max(...piece.cells.map(x=>x[0]));
-  const maxC=Math.max(...piece.cells.map(x=>x[1]));
-  for(let r0=0;r0<N;r0++) for(let c0=0;c0<N;c0++){
-    if(r0+maxR>=N||c0+maxC>=N) continue;
-    const cells = piece.cells.map(([dr,dc])=>[r0+dr,c0+dc]);
-    if(cells.every(([r,c])=>boardSet.has(cellKey(r,c)))){
-      plc.push(cells);
-    }
-  }
-  return plc;
-}
-
-let nodeCount = 0;
-let deadlineTs = Infinity;
-function timeUp(){
-  nodeCount++;
-  if((nodeCount & 1023)===0 && Date.now()>deadlineTs) return true;
-  return false;
-}
-
-// 把形状完全相同的方块合并成一组，组内带数量(count)，大幅减少重复形状造成的搜索爆炸
-function buildGroups(placementsByPiece){
-  const map = new Map();
-  pieces.forEach(p=>{
-    const key = JSON.stringify(p.cells);
-    if(!map.has(key)) map.set(key, {key, placements:placementsByPiece[p.id], count:0, pieceIds:[]});
-    const g = map.get(key);
-    g.count++; g.pieceIds.push(p.id);
-  });
-  return [...map.values()].sort((a,b)=>a.placements.length-b.placements.length);
-}
-function pieceById(id){ return pieces.find(p=>p.id===id); }
-
-function isTetromino(cellsSet){
-  if(cellsSet.size!==4) return false;
-  const arr=[...cellsSet].map(k=>k.split(',').map(Number));
-  const seen=new Set([arr[0].join(',')]);
-  const stack=[arr[0]];
-  while(stack.length){
-    const [r,c]=stack.pop();
-    for(const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]){
-      const nb=(r+dr)+','+(c+dc);
-      if(cellsSet.has(nb) && !seen.has(nb)){ seen.add(nb); stack.push(nb.split(',').map(Number)); }
-    }
-  }
-  return seen.size===4;
-}
-
-function canTile(emptySet, k){
-  if(timeUp()) return null;
-  if(emptySet.size!==4*k) return null;
-  if(k===0) return [];
-  const target=[...emptySet][0];
-  const results=[];
-  const seenShapes=new Set();
-  function grow(shapeArr, shapeSet){
-    if(shapeArr.length===4){
-      const key=[...shapeSet].sort().join('|');
-      if(!seenShapes.has(key)){ seenShapes.add(key); results.push(new Set(shapeSet)); }
-      return;
-    }
-    for(const cellStr of shapeArr){
-      const [r,c]=cellStr.split(',').map(Number);
-      for(const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]){
-        const nb=(r+dr)+','+(c+dc);
-        if(emptySet.has(nb) && !shapeSet.has(nb)){
-          shapeSet.add(nb);
-          grow([...shapeArr,nb], shapeSet);
-          shapeSet.delete(nb);
-        }
-      }
-    }
-  }
-  grow([target], new Set([target]));
-  for(const piece of results){
-    const rest2 = new Set([...emptySet].filter(x=>!piece.has(x)));
-    const rest = canTile(rest2, k-1);
-    if(rest!==null) return [piece, ...rest];
-    if(timeUp()) return null;
-  }
-  return null;
-}
-
-// exact cover: cover ALL board cells using pieces (each at most once). 目标格驱动,已经很快,保留原逻辑但加超时保护
-function exactCover(boardCells, placementsByPiece){
-  nodeCount=0;
-  function solve(empty, used, placed){
-    if(timeUp()) return 'TIMEOUT';
-    if(empty.size===0) return true;
-    const target=[...empty].sort()[0];
-    for(const p of pieces){
-      if(used.has(p.id)) continue;
-      for(const cells of placementsByPiece[p.id]){
-        const keys=cells.map(([r,c])=>cellKey(r,c));
-        if(!keys.includes(target)) continue;
-        if(keys.every(k=>empty.has(k))){
-          used.add(p.id); placed.push({piece:p, cells});
-          const newEmpty=new Set(empty); keys.forEach(k=>newEmpty.delete(k));
-          const r=solve(newEmpty, used, placed);
-          if(r===true) return true;
-          if(r==='TIMEOUT') return 'TIMEOUT';
-          placed.pop(); used.delete(p.id);
-        }
-      }
-    }
-    return false;
-  }
-  const boardSet = new Set(boardCells.map(([r,c])=>cellKey(r,c)));
-  const placed=[];
-  const r = solve(boardSet, new Set(), placed);
-  return r===true ? placed : (r==='TIMEOUT' ? 'TIMEOUT' : null);
-}
-
-// 把一个分组方案(每组用了几个、放在哪)展开成具体的piece实例列表，用于展示
-function expandGroupUsage(groupUsage){
-  // groupUsage: [{group, cellsList:[cells,...]}]
-  const result=[];
-  groupUsage.forEach(({group, cellsList})=>{
-    cellsList.forEach((cells, idx)=>{
-      result.push({piece: pieceById(group.pieceIds[idx]), cells});
-    });
-  });
-  return result;
-}
-
-// 核心：按“形状分组”做回溯。每组最多用 group.count 个，组内用 startIdx 保证同一子集不被重复枚举。
-// mode: 'max' 最大化用掉的方块数；'exactU' 恰好用 u 个且剩余格子能被 k 个自由四格块铺满
-function groupSearch(groups, boardCells, mode, opts){
-  const boardKeySet = new Set(boardCells.map(([r,c])=>cellKey(r,c)));
-  let best = {count:0, usage:null};
-  let found = null;
-
-  function tryFromGroup(gi, startIdx, remaining, occ, usage, usedCount){
-    if(timeUp()) return 'TIMEOUT';
-    if(mode==='max'){
-      // 上界剪枝：当前已用 + 剩余所有组的数量上限，若已不可能超过best则剪掉
-      let upper = usedCount;
-      for(let j=gi;j<groups.length;j++) upper += groups[j].count;
-      if(upper<=best.count) return;
-    } else {
-      // exactU剪枝：就算剩余的组全部用满，也凑不到目标数量u，这条分支没救了，直接剪掉
-      let upper = usedCount + remaining;
-      for(let j=gi+1;j<groups.length;j++) upper += groups[j].count;
-      if(upper<opts.u) return;
-    }
-    if(gi===groups.length){
-      if(mode==='max'){
-        if(usedCount>best.count){ best.count=usedCount; best.usage=usage.map(u=>({group:u.group, cellsList:u.cellsList.slice()})); }
-        return;
-      } else { // exactU
-        if(usedCount===opts.u){
-          const leftover = new Set([...boardKeySet].filter(x=>!occ.has(x)));
-          const tiling = canTile(leftover, opts.k);
-          if(tiling){ found = {usage: usage.map(u=>({group:u.group, cellsList:u.cellsList.slice()})), newPieces: tiling}; return 'STOP'; }
-        }
-        return;
-      }
-    }
-    const g = groups[gi];
-    // 选项1：这一组不再用了，进入下一组
-    const nextRemaining = groups[gi+1] ? groups[gi+1].count : 0;
-    const prevEntry = usage[usage.length-1];
-    let r = tryFromGroup(gi+1, 0, nextRemaining, occ, usage, usedCount);
-    if(r==='TIMEOUT'||r==='STOP') return r;
-    // 选项2：再用一个这一组的形状（如果还有名额）
-    if(remaining>0){
-      for(let idx=startIdx; idx<g.placements.length; idx++){
-        const cells = g.placements[idx];
-        const keys = cells.map(([r2,c2])=>cellKey(r2,c2));
-        let ok=true;
-        for(const kk of keys) if(occ.has(kk)){ ok=false; break; }
-        if(!ok) continue;
-        const newOcc = new Set(occ); keys.forEach(kk=>newOcc.add(kk));
-        let entry = usage.find(u=>u.group===g);
-        if(!entry){ entry={group:g, cellsList:[]}; usage.push(entry); }
-        entry.cellsList.push(cells);
-        if(mode==='exactU' && usedCount+1>opts.u){ entry.cellsList.pop(); if(entry.cellsList.length===0) usage.pop(); continue; }
-        const rr = tryFromGroup(gi, idx+1, remaining-1, newOcc, usage, usedCount+1);
-        entry.cellsList.pop();
-        if(entry.cellsList.length===0) usage.pop();
-        if(rr==='TIMEOUT'||rr==='STOP') return rr;
-      }
-    }
-    return;
-  }
-
-  nodeCount=0;
-  const r = tryFromGroup(0, 0, groups[0]?groups[0].count:0, new Set(), [], 0);
-  if(mode==='max'){
-    return { count: best.count, sol: best.usage ? expandGroupUsage(best.usage) : [], timeout: r==='TIMEOUT' };
-  } else {
-    return found ? { used: expandGroupUsage(found.usage), newPieces: found.newPieces.map(s=>[...s].map(x=>x.split(',').map(Number))) }
-                 : (r==='TIMEOUT' ? 'TIMEOUT' : null);
-  }
-}
-
-function maxCoverage(boardCells, placementsByPiece){
-  const groups = buildGroups(placementsByPiece);
-  const r = groupSearch(groups, boardCells, 'max', {});
-  return r;
-}
-
-function useExactlyWithTileCheck(boardCells, placementsByPiece, u, k){
-  const groups = buildGroups(placementsByPiece);
-  const r = groupSearch(groups, boardCells, 'exactU', {u,k});
-  return r;
-}
-
-/* ---------- 主求解流程 ---------- */
-let lastResult = null;
-
-document.getElementById('solveBtn').onclick = ()=>{
-  const logEl=document.getElementById('log');
-  logEl.textContent='求解中...';
-  setTimeout(runSolve, 30);
-};
-
-function runSolve(){
-  const logEl=document.getElementById('log');
-  const boardCells = getBoardCells();
-  const boardN = boardCells.length;
-  if(boardN===0){ logEl.textContent='棋盘是空的，先点格子启用棋盘。'; return; }
-  if(pieces.length===0){ logEl.textContent='还没有任何方块，先在②画几个形状。'; return; }
-
-  const boardSet = new Set(boardCells.map(([r,c])=>cellKey(r,c)));
-  const placementsByPiece={};
-  pieces.forEach(p=>{ placementsByPiece[p.id]=getPlacements(p, boardSet); });
-
-  let logLines=[];
-  logLines.push(`棋盘格数: ${boardN} ｜ 方块数: ${pieces.length}`);
-  const t0 = Date.now();
-
-  const T = boardN/4;
-  let plans = {};
-
-  if(Number.isInteger(T)){
-    deadlineTs = Date.now()+4000;
-    const exact = exactCover(boardCells, placementsByPiece);
-    if(exact==='TIMEOUT'){
-      logLines.push('⏱️ 精确覆盖搜索超时（4秒），改为求最大覆盖。');
-    } else if(exact){
-      plans.A = {label:'完美覆盖（精确解）', used:exact, empty:[], newPieces:[]};
-      logLines.push('✅ 找到精确覆盖，0空格！');
-    }
-  } else {
-    logLines.push('⚠️ 棋盘格数不是4的倍数，不可能被方块完全铺满。');
-  }
-
-  if(!plans.A){
-    deadlineTs = Date.now()+4000;
-    const mc = maxCoverage(boardCells, placementsByPiece);
-    const usedKeys = new Set();
-    mc.sol.forEach(u=>u.cells.forEach(([r,c])=>usedKeys.add(cellKey(r,c))));
-    const empty = boardCells.filter(([r,c])=>!usedKeys.has(cellKey(r,c)));
-    plans.A = {label:'不补块（最大覆盖）', used:mc.sol, empty, newPieces:[]};
-    logLines.push(`方案A：最多放 ${mc.sol.length} 个方块，覆盖 ${mc.sol.length*4} 格，空 ${empty.length} 格。${mc.timeout?'（搜索超时，可能不是真正最大值）':''}`);
-
-    if(Number.isInteger(T)){
-      let fixFound=null;
-      for(let k=1; k<=4 && !fixFound; k++){
-        const u = T-k;
-        if(u<0 || u>pieces.length) continue;
-        deadlineTs = Date.now()+3000;
-        const attempt = useExactlyWithTileCheck(boardCells, placementsByPiece, u, k);
-        if(attempt==='TIMEOUT'){
-          logLines.push(`检查补 ${k} 块：⏱️ 超时（跳过，不代表不可行）`);
-        } else {
-          if(attempt){ fixFound={k, ...attempt}; }
-          logLines.push(`检查补 ${k} 块：${attempt?'✅ 可行':'❌ 不行'}`);
-        }
-      }
-      if(fixFound){
-        const usedKeys2=new Set();
-        fixFound.used.forEach(u=>u.cells.forEach(([r,c])=>usedKeys2.add(cellKey(r,c))));
-        plans.B = {label:`补${fixFound.k}块方案`, used:fixFound.used, empty:[], newPieces:fixFound.newPieces};
-      }
-    }
-  }
-
-  deadlineTs = Infinity;
-  logLines.push(`用时 ${((Date.now()-t0)/1000).toFixed(1)} 秒`);
-  lastResult = plans;
-  renderResult(plans);
-  logEl.textContent = logLines.join('\n');
-}
-
-
-/* ---------- 结果渲染 ---------- */
-function renderResult(plans){
-  document.getElementById('resultSection').classList.remove('hidden');
-  const tabsEl=document.getElementById('planTabs');
-  tabsEl.innerHTML='';
-  const keys=Object.keys(plans);
-  keys.forEach((k,i)=>{
-    const t=document.createElement('div');
-    t.className='tab'+(i===0?' active':'');
-    t.textContent=plans[k].label;
-    t.onclick=()=>{
-      [...tabsEl.children].forEach(x=>x.classList.remove('active'));
-      t.classList.add('active');
-      drawPlan(plans[k]);
-    };
-    tabsEl.appendChild(t);
-  });
-  drawPlan(plans[keys[0]]);
-}
-
-function drawPlan(plan){
-  const boardResult=document.getElementById('boardResult');
-  boardResult.innerHTML='';
-  const cellMap={};
-  plan.used.forEach(u=>{
-    u.cells.forEach(([r,c])=>{ cellMap[cellKey(r,c)]=u.piece; });
-  });
-  const newColors=['#ffcf40','#ff9f40','#ff6f91','#9bffba'];
-  plan.newPieces.forEach((cells,idx)=>{
-    cells.forEach(([r,c])=>{ cellMap[cellKey(r,c)]={name:'新'+(idx+1), color:newColors[idx%newColors.length]}; });
-  });
-  const emptySet=new Set((plan.empty||[]).map(([r,c])=>cellKey(r,c)));
-
-  for(let r=0;r<N;r++) for(let c=0;c<N;c++){
-    const d=document.createElement('div');
-    const key=cellKey(r,c);
-    if(!boardActive[r][c]){ d.className='cell off'; }
-    else if(cellMap[key]){
-      d.className='cell filled';
-      d.style.background=cellMap[key].color;
-      d.textContent=cellMap[key].name;
-    } else if(emptySet.has(key)){
-      d.className='cell X'; d.textContent='×';
-    } else {
-      d.className='cell on';
-    }
-    boardResult.appendChild(d);
-  }
-
-  const usedCount=plan.used.length, newCount=plan.newPieces.length;
-  const filledCells=usedCount*4+newCount*4;
-  const emptyCount=(plan.empty||[]).length;
-  document.getElementById('stat').innerHTML=`
-    <div><b>${usedCount}</b>现有方块</div>
-    <div><b>${newCount}</b>新增方块</div>
-    <div><b>${emptyCount}</b>空格</div>
-  `;
-
-  const legend=document.getElementById('legend');
-  let html='<h3 style="font-size:13px;color:var(--muted);margin:0 0 6px;">使用方块</h3>';
-  const seen=new Set();
-  plan.used.forEach(u=>{
-    if(seen.has(u.piece.id)) return; seen.add(u.piece.id);
-    html+=`<div class="row"><span class="swatchS" style="background:${u.piece.color}"></span><span>${u.piece.name}</span></div>`;
-  });
-  if(plan.newPieces.length){
-    html+='<h3 style="font-size:13px;color:var(--muted);margin:8px 0 6px;">新增形状（储存区没有，需自己创建）</h3>';
-    plan.newPieces.forEach((cells,idx)=>{
-      html+=`<div class="row"><span class="swatchS" style="background:${newColors[idx%newColors.length]}"></span><span>新增${idx+1} — 占格: ${cells.map(p=>'('+p[0]+','+p[1]+')').join(' ')}</span></div>`;
-    });
-  }
-  const usedIds=new Set(plan.used.map(u=>u.piece.id));
-  const unused=pieces.filter(p=>!usedIds.has(p.id));
-  if(unused.length){
-    html+=`<div class="note">闲置未用：${unused.map(p=>p.name).join('、')}</div>`;
-  }
-  legend.innerHTML=html;
-}
-
-/* 本地保存：棋盘和方块库下次打开还在 */
-(function(){
-  var K='xxjhq.v1', ob=renderBoardEdit, op=renderPieceList;
-  function persist(){ try{ localStorage.setItem(K, JSON.stringify({b:boardActive,p:pieces,n:pieceCounter})); }catch(e){} }
-  renderBoardEdit=function(){ ob(); persist(); };
-  renderPieceList=function(){ op(); persist(); };
-  try{
-    var d=JSON.parse(localStorage.getItem(K)||'null');
-    if(d && Array.isArray(d.b) && d.b.length===N && Array.isArray(d.p)){ boardActive=d.b; pieces=d.p; pieceCounter=d.n||d.p.length; }
-  }catch(e){}
-  renderBoardEdit(); renderPieceList();
-})();
-
 })();
 </script>
 </body>
