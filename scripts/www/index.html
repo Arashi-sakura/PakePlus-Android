@@ -274,6 +274,16 @@
   .isle-row .bar .win-mark{position:absolute;top:0;bottom:0;width:2px;background:rgba(0,0,0,.25);z-index:2}
   .isle-row .clear{visibility:hidden}
   .isle-row.has-rec .clear{visibility:visible}
+  .isle-row .clear.slot-del{visibility:visible}
+  .isle-note{flex:1 1 100%;font-size:11.5px;color:var(--dim);cursor:pointer;padding:1px 2px;word-break:break-all;text-align:left}
+  .isle-head{cursor:pointer}
+  .isle-head .gcaret{display:inline-block;width:14px;color:var(--gold);font-size:11px}
+  .isle-head .cnt{color:var(--dim);font-weight:500;font-size:11.5px}
+  .isle-head .isle-note{cursor:default}
+  .isle-head .isle-note:empty{display:none}
+  .isle-note.empty{color:#AEAEB2}
+  .isle-note-inp{flex:1 1 100%;font-size:13px;padding:5px 8px;border-radius:8px;border:1px solid var(--gold);
+                 background:var(--panel);color:var(--ink);outline:none;min-width:0}
   .isle-row.idle .bar{display:none}
 
   .isle-row.run .clock{color:var(--jade)}
@@ -350,7 +360,7 @@
 
   <div class="smart-bar">
     <span class="smart-ico">⚡</span>
-    <input id="topSmartInp" class="smart-inp" maxlength="50" placeholder="输入如：黑曜石宝箱 1岛 刚刚 / 前1分钟">
+    <input id="topSmartInp" class="smart-inp" maxlength="50" placeholder="如：黑曜石宝箱 1岛2号 剩5分钟 / 刚刚 / 前3分钟">
     <button id="topSmartBtn" class="smart-btn" type="button">录入</button>
   </div>
 
@@ -381,7 +391,7 @@
     </div>
   </section>
 
-  <section id="codeCard" class="team-card">
+  <section id="codeCard" class="team-card" hidden>
     <div class="team-box">
       <h3>口令码分享 / 导入（本地计时器）</h3>
       <div class="input-grp">
@@ -471,6 +481,7 @@
     </div>
 
     <label class="check box"><input type="checkbox" id="sLoop"><span>到点自动循环下一轮</span></label>
+    <label class="check box"><input type="checkbox" id="sMulti"><span>每个岛可添加多个独立计时器（如遗迹钻头）</span></label>
 
     <p id="addErr" class="err" hidden></p>
 
@@ -584,6 +595,10 @@
         <span class="parse-k">目标岛屿（可点选更改）</span>
         <div id="scIslesGrid" class="parse-isles"></div>
       </div>
+      <div id="scSlotWrap" style="margin-top:6px" hidden>
+        <span class="parse-k">计时器（该岛有多个时可选）</span>
+        <div id="scSlotGrid" class="parse-isles"></div>
+      </div>
     </div>
     <div class="sheet-btns" style="margin-top:8px">
       <button id="scCancelBtn" class="btn-cancel" type="button" style="min-height:40px;font-size:14px">取消</button>
@@ -611,12 +626,13 @@
     </div>
   </div>
 
-  <input id="qfSmartInp" class="qf-inp" maxlength="50" placeholder="如：黑曜石宝箱 2岛 前1分钟">
+  <input id="qfSmartInp" class="qf-inp" maxlength="50" placeholder="如：黑曜石宝箱 1岛2号 剩5分钟">
   <div class="quick-chips" id="qfSmartEx" style="margin-bottom:8px;justify-content:flex-start">
     <button type="button" class="chip" data-fill=" 刚刚">刚刚</button>
     <button type="button" class="chip" data-fill=" 前1分钟">前1分</button>
-    <button type="button" class="chip" data-fill=" 前3分钟">前3分</button>
+    <button type="button" class="chip" data-fill=" 剩5分钟">剩5分</button>
     <button type="button" class="chip" data-fill=" 1岛">1岛</button>
+    <button type="button" class="chip" data-fill="2号">2号</button>
   </div>
   <button id="qfSmartSubmit" class="qf-submit" type="button">解析并确认</button>
 </aside>
@@ -629,6 +645,7 @@ var KEY_TEAM  = "czmf.timer.team.v3";
 var KEY_MODE  = "czmf.timer.mode.v3";
 var KEY_SQUADS = "czmf.timer.squads.v4";
 var MAX_SQUADS = 5;
+var KEY_SQUAD_CODES = "czmf.timer.squadcodes.v1";
 var ISLES = 10;
 var INITIAL_CATS = ["植物", "宝箱", "世界boos", "砖头", "矿石"];
 var INITIAL_SUBCATS = {
@@ -678,6 +695,7 @@ var activeSquad = ""; // 当前查看的小队暗号
 var conns = {};       // 每个小队各自的连接 {code: {es, bc, status, msg}}
 var syncDebounce = null;
 var warned = {};
+var groupOpen = {};
 
 var qfSelectedIsle = 0;
 var qfSelectedResId = "";
@@ -717,17 +735,42 @@ function cloneDefaultSubCats(){
   return m;
 }
 
+/* 计时槽：0~9 是各岛的主计时器；10 以后是“多计时器”额外加的，所在岛记在 slotIsle 里 */
+function slotCount(res){ return ISLES + ((res.slotIsle && res.slotIsle.length) || 0); }
+function islandOf(res, i){ return i < ISLES ? i : res.slotIsle[i - ISLES]; }
+function isMulti(res){ return res.multi === true || /遗迹钻头/.test(res.name || ""); }
+function slotLabel(res, i){
+  var k = islandOf(res, i) + 1;
+  if(i < ISLES) return k + "岛";
+  var ord = 2;
+  for(var j = 0; j < i - ISLES; j++){ if(res.slotIsle[j] === res.slotIsle[i - ISLES]) ord++; }
+  return k + "岛·" + ord;
+}
+function getNote(res, i){ return (res.notes && typeof res.notes[i] === "string") ? res.notes[i] : ""; }
+function setNote(res, i, v){
+  if(!Array.isArray(res.notes)) res.notes = [];
+  while(res.notes.length < slotCount(res)) res.notes.push("");
+  res.notes[i] = (v || "").trim().slice(0, 60);
+}
+
 function normalizeResources(arr){
   if(!Array.isArray(arr)) return [];
   return arr.filter(function(r){ return r && r.id && r.name && Array.isArray(r.starts); }).map(function(r){
-    while(r.starts.length < ISLES) r.starts.push(null);
-    r.starts.length = ISLES;
+    r.slotIsle = Array.isArray(r.slotIsle) ? r.slotIsle.filter(function(v){ return typeof v === "number" && v >= 0 && v < ISLES; }).slice(0, 30) : [];
+    var n = ISLES + r.slotIsle.length;
+    while(r.starts.length < n) r.starts.push(null);
+    r.starts.length = n;
     if(!Array.isArray(r.loops)) r.loops = [];
-    while(r.loops.length < ISLES) r.loops.push(null);
-    r.loops.length = ISLES;
+    while(r.loops.length < n) r.loops.push(null);
+    r.loops.length = n;
     if(!Array.isArray(r.customEnd)) r.customEnd = [];
-    while(r.customEnd.length < ISLES) r.customEnd.push(null);
-    r.customEnd.length = ISLES;
+    while(r.customEnd.length < n) r.customEnd.push(null);
+    r.customEnd.length = n;
+    if(!Array.isArray(r.notes)) r.notes = [];
+    r.notes = r.notes.map(function(v){ return typeof v === "string" ? v : ""; });
+    while(r.notes.length < n) r.notes.push("");
+    r.notes.length = n;
+    r.multi = (r.multi === true);
     if(typeof r.subcat !== "string") r.subcat = "";
     r.loop = (r.loop === true);
     return r;
@@ -831,13 +874,75 @@ function squadByCode(code){
   return null;
 }
 
+/* 小队暗号的多重备份：暗号很小，单独存一份，并镜像到 IndexedDB，防止大数据写入失败或被清掉时丢号 */
+function idbOpen(cb){
+  try{
+    var rq = indexedDB.open("czmf-backup", 1);
+    rq.onupgradeneeded = function(){ rq.result.createObjectStore("kv"); };
+    rq.onsuccess = function(){ cb(rq.result); };
+    rq.onerror = function(){ cb(null); };
+  }catch(e){ cb(null); }
+}
+function idbPut(key, val){
+  idbOpen(function(db){
+    if(!db) return;
+    try{ db.transaction("kv", "readwrite").objectStore("kv").put(val, key); }catch(e){}
+  });
+}
+function idbGet(key, cb){
+  idbOpen(function(db){
+    if(!db){ cb(null); return; }
+    try{
+      var rq = db.transaction("kv", "readonly").objectStore("kv").get(key);
+      rq.onsuccess = function(){ cb(rq.result || null); };
+      rq.onerror = function(){ cb(null); };
+    }catch(e){ cb(null); }
+  });
+}
+
 function saveSquads(){
+  var codes = JSON.stringify({active: activeSquad, codes: squads.map(function(q){ return q.code; })});
+  try{ localStorage.setItem(KEY_SQUAD_CODES, codes); }catch(e){}
+  idbPut(KEY_SQUAD_CODES, codes);
   try{
     localStorage.setItem(KEY_SQUADS, JSON.stringify({
       active: activeSquad,
       list: squads.map(function(q){ return {code: q.code, data: q.data}; })
     }));
-  }catch(e){}
+  }catch(e){
+    /* 空间不足时去掉图片再存一次，保证小队本身不丢 */
+    try{
+      localStorage.setItem(KEY_SQUADS, JSON.stringify({
+        active: activeSquad,
+        list: squads.map(function(q){
+          var d = {}; for(var k in q.data){ if(k !== "subImgs") d[k] = q.data[k]; }
+          return {code: q.code, data: d};
+        })
+      }));
+    }catch(e2){}
+  }
+  scheduleNativeSoon();
+}
+
+/* 如果小队数据被浏览器清掉了，用备份的暗号自动重新加入 */
+function restoreSquadsIfLost(){
+  if(squads.length) return;
+  function apply(raw){
+    if(squads.length || !raw) return;
+    try{
+      var o = JSON.parse(raw);
+      if(!o || !Array.isArray(o.codes) || !o.codes.length) return;
+      o.codes.slice(0, MAX_SQUADS).forEach(function(c){
+        if(typeof c === "string" && c) connectRoom(c, false);
+      });
+      if(typeof o.active === "string" && squadByCode(o.active)) switchSquad(o.active);
+      showToast("已恢复小队：" + o.codes.join("、"));
+    }catch(e){}
+  }
+  var raw = null;
+  try{ raw = localStorage.getItem(KEY_SQUAD_CODES); }catch(e){}
+  if(raw){ apply(raw); return; }
+  idbGet(KEY_SQUAD_CODES, apply);
 }
 
 function loadAll(){
@@ -903,6 +1008,7 @@ function saveActive(fromRemote){
     localData.subTab = activeSubTab;
     try{ localStorage.setItem(KEY_LOCAL, JSON.stringify(localData)); }catch(e){}
   }
+  scheduleNativeSoon();
 }
 
 function currentResources(){ return currentMode === "team" ? teamData.resources : localData.resources; }
@@ -1077,15 +1183,143 @@ function beep(){
   }catch(e){}
 }
 
-function notify(title, body){
+/* ===== 打包成 APK（Capacitor）后的手机系统通知：提前把未来的提醒交给系统闹钟，App 在后台/被划掉也会响 ===== */
+function nativeLN(){
   try{
-    if(("Notification" in window) && Notification.permission === "granted"){
-      new Notification(title, {body: body});
-    }
+    var C = window.Capacitor;
+    if(C && C.isNativePlatform && C.isNativePlatform() && C.Plugins && C.Plugins.LocalNotifications) return C.Plugins.LocalNotifications;
   }catch(e){}
+  return null;
+}
+var nativePerm = false;
+var nativeTimer = null;
+
+function hashId(str){
+  var h = 0;
+  for(var i = 0; i < str.length; i++){ h = (h * 31 + str.charCodeAt(i)) | 0; }
+  return (Math.abs(h) % 2147483000) + 1;
+}
+
+function collectNativeEvents(now){
+  var stores = [localData];
+  squads.forEach(function(q){ stores.push(q.data); });
+  if(!squads.length) stores.push(teamData);
+  var out = [];
+  stores.forEach(function(store){
+    (store.resources || []).forEach(function(res){
+      for(var i = 0; i < slotCount(res); i++){
+        var eff = effectiveStart(res, i, now);
+        if(!eff) continue;
+        var label = res.name + "·" + slotLabel(res, i);
+        var rounds = (effLoop(res, i) && !eff.edited && eff.durMs > 0) ? 3 : 1;
+        for(var c = 0; c < rounds; c++){
+          var o = c * eff.durMs;
+          var add = function(t, title, body, kind){
+            if(t > now + 1000) out.push({t: t, title: title, body: body, id: hashId(res.id + ":" + i + ":" + kind + ":" + t)});
+          };
+          if(eff.hasWin){
+            add(eff.winStart + o - 300000, "还剩5分钟：" + label, "5分钟后进入刷新时段，准备好！", "a");
+            add(eff.winStart + o, "进入刷新时段：" + label, "现在可以刷新了", "w");
+            add(eff.end + o - 300000, "还剩5分钟：" + label, "5分钟后到保底必刷时间！", "b");
+            add(eff.end + o, "保底必刷：" + label, "到点了，快去刷新！", "e");
+          }else{
+            add(eff.end + o - 300000, "还剩5分钟：" + label, "5分钟后倒计时结束，准备好！", "b");
+            add(eff.end + o, "到点：" + label, "倒计时结束，快去刷新！", "e");
+          }
+        }
+      }
+    });
+  });
+  out.sort(function(a, b){ return a.t - b.t; });
+  return out.slice(0, 60);
+}
+
+function scheduleNative(){
+  var LN = nativeLN();
+  if(!LN || !nativePerm) return;
+  LN.getPending().then(function(r){
+    var ids = ((r && r.notifications) || []).map(function(n){ return {id: n.id}; });
+    return ids.length ? LN.cancel({notifications: ids}) : null;
+  }).then(function(){
+    var ev = collectNativeEvents(Date.now());
+    if(!ev.length) return null;
+    return LN.schedule({notifications: ev.map(function(e){
+      return {id: e.id, title: e.title, body: e.body, largeBody: e.body, channelId: "timer",
+              group: "czmf-timer", autoCancel: true,
+              schedule: {at: new Date(e.t), allowWhileIdle: true}};
+    })});
+  }).catch(function(){});
+}
+
+function scheduleNativeSoon(){
+  if(!nativeLN() || !nativePerm) return;
+  clearTimeout(nativeTimer);
+  nativeTimer = setTimeout(scheduleNative, 1500);
+}
+
+function nativeInit(){
+  var LN = nativeLN();
+  if(!LN) return;
+  try{ LN.createChannel({id: "timer", name: "刷新提醒", description: "计时到点提醒", importance: 5, visibility: 1, vibration: true}); }catch(e){}
+  LN.checkPermissions().then(function(r){
+    if(r && r.display === "granted") return r;
+    return LN.requestPermissions();
+  }).then(function(r){
+    nativePerm = !!(r && r.display === "granted");
+    updateNotifyBtn();
+    if(nativePerm) scheduleNativeSoon();
+  }).catch(function(){});
+}
+
+document.addEventListener("visibilitychange", scheduleNativeSoon);
+
+var swReg = null;
+function initSW(){
+  try{
+    if(!("serviceWorker" in navigator) || !/^https?:$/.test(location.protocol)) return;
+    var code = "self.addEventListener('notificationclick',function(e){e.notification.close();e.waitUntil(clients.matchAll({type:'window'}).then(function(l){if(l.length)return l[0].focus();return clients.openWindow('./');}));});";
+    var url = URL.createObjectURL(new Blob([code], {type: "text/javascript"}));
+    navigator.serviceWorker.register(url).then(function(r){ swReg = r; }).catch(function(){});
+    navigator.serviceWorker.ready.then(function(r){ swReg = r; }).catch(function(){});
+  }catch(e){}
+}
+initSW();
+
+/* 推到手机下拉状态栏：标题 + 一行说明（和系统消息一个样子）。
+   APK 内走系统本地通知；浏览器里优先用 ServiceWorker（安卓 Chrome 只认这个），不行再退回 new Notification */
+function pushStatusNotice(title, body){
+  var LN = nativeLN();
+  if(LN){
+    if(!nativePerm) return;
+    try{
+      LN.schedule({notifications: [{
+        id: hashId(title + body + Date.now()), title: title, body: body, channelId: "timer",
+        group: "czmf-timer", schedule: {at: new Date(Date.now() + 300), allowWhileIdle: true}
+      }]}).catch(function(){});
+    }catch(e){}
+    return;
+  }
+  try{
+    if(!("Notification" in window) || Notification.permission !== "granted") return;
+    var opt = {body: body, tag: "czmf-" + hashId(title), renotify: true, vibrate: [200, 100, 200]};
+    if(swReg && swReg.showNotification){ swReg.showNotification(title, opt); return; }
+    new Notification(title, opt);
+  }catch(e){
+    try{ new Notification(title, {body: body}); }catch(e2){}
+  }
+}
+
+function notify(title, body){
+  if(nativeLN()) return; // APK 里由已排好的系统通知负责
+  pushStatusNotice(title, body);
 }
 
 function updateNotifyBtn(){
+  if(nativeLN()){
+    notifyBtn.hidden = false;
+    notifyBtn.textContent = nativePerm ? "通知:开" : "通知";
+    return;
+  }
   if(!("Notification" in window)){
     notifyBtn.hidden = true;
     return;
@@ -1094,9 +1328,22 @@ function updateNotifyBtn(){
   notifyBtn.textContent = p === "granted" ? "通知:开" : "通知";
 }
 notifyBtn.addEventListener("click", function(){
+  var LN = nativeLN();
+  if(LN){
+    LN.requestPermissions().then(function(r){
+      nativePerm = !!(r && r.display === "granted");
+      updateNotifyBtn();
+      if(nativePerm){ showToast("已开启手机通知"); scheduleNativeSoon(); pushStatusNotice("刷新表 · 通知已开启", "到点、进窗、还剩5分钟都会推送到状态栏"); }
+      else showToast("请在手机系统设置里允许本应用通知");
+    }).catch(function(){});
+    return;
+  }
   if(!("Notification" in window)) return;
   try{
-    Notification.requestPermission().then(function(){ updateNotifyBtn(); });
+    Notification.requestPermission().then(function(){
+      updateNotifyBtn();
+      if(Notification.permission === "granted") pushStatusNotice("刷新表 · 通知已开启", "到点、进窗、还剩5分钟都会推送到状态栏（网页需保持打开）");
+    });
   }catch(e){ updateNotifyBtn(); }
 });
 
@@ -1551,7 +1798,7 @@ function openEditTimeModal(rid, isleIdx){
   var now = Date.now();
   var eff = effectiveStart(res, isleIdx, now);
 
-  $("#editTimeTitle").textContent = res.name + " · " + (isleIdx + 1) + "岛 修改时间";
+  $("#editTimeTitle").textContent = res.name + " · " + slotLabel(res, isleIdx) + " 修改时间";
   var remSec = 0;
   if(eff && eff.end > now){
     remSec = Math.ceil((eff.end - now) / 1000);
@@ -1632,7 +1879,7 @@ function saveEditedTime(){
     lastRound[key] = 0;
     delete loopCache[key];
     delete recentLoopAt[key];
-    showToast("已更新 " + res.name + " " + (i + 1) + "岛 剩余时间");
+    showToast("已更新 " + res.name + " " + slotLabel(res, i) + " 剩余时间");
   }
 
   $("#editTimeModal").hidden = true;
@@ -1650,7 +1897,7 @@ $("#etCancelBtn").addEventListener("click", function(){
 
 function nearestKey(res, now){
   var best = Infinity;
-  for(var i = 0; i < ISLES; i++){
+  for(var i = 0; i < slotCount(res); i++){
     var eff = effectiveStart(res, i, now);
     if(!eff) continue;
     var st = isleStateAt(eff, now);
@@ -1707,19 +1954,22 @@ function buildIsle(res, i){
   row.dataset.rid = res.id;
   row.dataset.isle = i;
   var looping = effLoop(res, i);
+  var note = getNote(res, i);
   row.innerHTML =
-    '<span class="isle-name">' + (i + 1) + '岛</span>' +
+    '<span class="isle-name">' + slotLabel(res, i) + '</span>' +
     '<span class="isle-phase"></span>' +
     '<span class="clock" title="点击修改时间">--:--</span>' +
     '<span class="next"></span>' +
     '<span class="rec-at"></span>' +
     '<div class="isle-btns">' +
+      ((isMulti(res) && i < ISLES) ? '<button class="btn add-slot" type="button" title="这个岛再加一个独立计时器">＋</button>' : '') +
       '<button class="btn rec" type="button">记录</button>' +
       '<button class="btn edit-t" type="button">改时</button>' +
       '<button class="btn lp' + (looping ? ' on' : '') + '" type="button" aria-pressed="' + (looping ? 'true' : 'false') + '">' +
         (looping ? '循环' : '单次') + '</button>' +
-      '<button class="btn del clear" type="button" aria-label="清空">×</button>' +
+      '<button class="btn del clear' + (i >= ISLES ? ' slot-del' : '') + '" type="button" aria-label="清空">×</button>' +
     '</div>' +
+    '<div class="isle-note' + (note ? '' : ' empty') + '" title="点击编辑备注">' + (note ? esc(note) : '＋备注') + '</div>' +
     '<div class="bar"><span class="win-mark" hidden></span><i></i></div>';
 
   row.querySelector(".lp").addEventListener("click", function(){ toggleIsleLoop(res.id, i); });
@@ -1727,7 +1977,90 @@ function buildIsle(res, i){
   row.querySelector(".edit-t").addEventListener("click", function(){ openEditTimeModal(res.id, i); });
   row.querySelector(".clock").addEventListener("click", function(){ openEditTimeModal(res.id, i); });
   row.querySelector(".clear").addEventListener("click", function(){ clearIsle(res.id, i); });
+  row.querySelector(".isle-note").addEventListener("click", function(ev){ editNote(res.id, i, ev.currentTarget); });
+  var addBtn = row.querySelector(".add-slot");
+  if(addBtn) addBtn.addEventListener("click", function(){ addExtraSlot(res.id, i); });
   return row;
+}
+
+function groupSlots(res, k){
+  var arr = [k];
+  if(res.slotIsle){
+    for(var j = 0; j < res.slotIsle.length; j++){ if(res.slotIsle[j] === k) arr.push(ISLES + j); }
+  }
+  return arr;
+}
+
+function buildGroupHead(res, k, n){
+  var open = !!groupOpen[res.id + ":" + k];
+  var el = document.createElement("div");
+  el.className = "isle-row isle-head idle";
+  el.dataset.rid = res.id;
+  el.dataset.gisle = k;
+  el.innerHTML =
+    '<span class="isle-name"><span class="gcaret">' + (open ? "▾" : "▸") + '</span>' + (k + 1) + '岛 <span class="cnt">×' + n + '</span></span>' +
+    '<span class="isle-phase"></span>' +
+    '<span class="clock">--:--</span>' +
+    '<span class="next"></span>' +
+    '<div class="isle-btns">' +
+      (isMulti(res) ? '<button class="btn add-slot" type="button" title="这个岛再加一个独立计时器">＋</button>' : '') +
+    '</div>' +
+    '<div class="isle-note"></div>';
+  el.addEventListener("click", function(ev){
+    if(ev.target.closest("button")) return;
+    var key = res.id + ":" + k;
+    groupOpen[key] = !groupOpen[key];
+    var body = el.nextElementSibling;
+    if(body) body.hidden = !groupOpen[key];
+    el.querySelector(".gcaret").textContent = groupOpen[key] ? "▾" : "▸";
+  });
+  var ab = el.querySelector(".add-slot");
+  if(ab) ab.addEventListener("click", function(){ addExtraSlot(res.id, k); });
+  return el;
+}
+
+function patchGroupHeads(res, now){
+  var heads = listEl.querySelectorAll('.isle-head[data-rid="' + res.id + '"]');
+  heads.forEach(function(head){
+    var k = parseInt(head.dataset.gisle, 10);
+    var best = null, bestKey = Infinity;
+    groupSlots(res, k).forEach(function(sl){
+      var eff = effectiveStart(res, sl, now);
+      if(!eff) return;
+      var st = isleStateAt(eff, now);
+      var key = (st === "due") ? (eff.end - now - 1e9) : (st === "win") ? (eff.end - now - 5e8) : (eff.winStart - now);
+      if(key < bestKey){ bestKey = key; best = {slot: sl, eff: eff, st: st}; }
+    });
+    var phaseEl = head.querySelector(".isle-phase"), clock = head.querySelector(".clock"),
+        nextEl = head.querySelector(".next"), noteEl = head.querySelector(".isle-note");
+    ["idle", "run", "win", "due"].forEach(function(c){ head.classList.toggle(c, (best ? best.st : "idle") === c); });
+    head.classList.remove("t-yellow", "t-red");
+    if(!best){
+      phaseEl.textContent = ""; clock.textContent = "--:--"; nextEl.textContent = ""; noteEl.textContent = "";
+      return;
+    }
+    var eff = best.eff, st = best.st;
+    if(st === "run"){
+      var rem = (eff.hasWin ? eff.winStart : eff.end) - now, tone = toneOf(rem);
+      head.classList.toggle("t-yellow", tone === "yellow");
+      head.classList.toggle("t-red", tone === "red");
+      phaseEl.textContent = eff.hasWin ? "距进窗" : "计时";
+      clock.textContent = fmtRemain(rem);
+      nextEl.textContent = eff.hasWin ? (fmtHM(eff.winStart) + "~" + fmtHM(eff.end) + " 刷") : fmtWhen(eff.end);
+    }else if(st === "win"){
+      var remMax = eff.end - now;
+      head.classList.toggle("t-red", remMax < 600000);
+      phaseEl.textContent = "刷新窗";
+      clock.textContent = fmtRemain(remMax);
+      nextEl.textContent = fmtHM(eff.winStart) + "~" + fmtHM(eff.end) + " 随时刷";
+    }else{
+      phaseEl.textContent = "到点";
+      clock.textContent = "已到点";
+      nextEl.textContent = "逾 " + fmtOver(now - eff.end);
+    }
+    var nt = getNote(res, best.slot);
+    noteEl.textContent = nt ? ("最近" + (best.slot >= ISLES ? "（" + slotLabel(res, best.slot) + "）" : "") + "：" + nt) : "";
+  });
 }
 
 function buildRes(res){
@@ -1760,7 +2093,25 @@ function buildRes(res){
   if(res.open){
     var wrap = document.createElement("div");
     wrap.className = "branches";
-    for(var i = 0; i < ISLES; i++) wrap.appendChild(buildIsle(res, i));
+    for(var i = 0; i < ISLES; i++){
+      var extras = [];
+      if(res.slotIsle){
+        for(var j = 0; j < res.slotIsle.length; j++){
+          if(res.slotIsle[j] === i) extras.push(ISLES + j);
+        }
+      }
+      if(!extras.length){
+        wrap.appendChild(buildIsle(res, i));
+      }else{
+        wrap.appendChild(buildGroupHead(res, i, extras.length + 1));
+        var body = document.createElement("div");
+        body.className = "isle-gbody";
+        body.hidden = !groupOpen[res.id + ":" + i];
+        body.appendChild(buildIsle(res, i));
+        extras.forEach(function(sl){ body.appendChild(buildIsle(res, sl)); });
+        wrap.appendChild(body);
+      }
+    }
     li.appendChild(wrap);
   }
   return li;
@@ -1779,19 +2130,19 @@ function subSummary(sc, now){
     var b = bounds(res);
     e0 = (e0 === null) ? b[0] : Math.min(e0, b[0]);
     l0 = (l0 === null) ? b[1] : Math.max(l0, b[1]);
-    for(var i = 0; i < ISLES; i++){
+    for(var i = 0; i < slotCount(res); i++){
       var eff = effectiveStart(res, i, now);
       if(!eff) continue;
       var st = isleStateAt(eff, now);
       if(st === "run"){
         var rem = (eff.hasWin ? eff.winStart : eff.end) - now;
-        if(!best || (best.mode !== "inWin" && rem < best.rem)) best = {isle: i, rem: rem, mode: "toWin"};
+        if(!best || (best.mode !== "inWin" && rem < best.rem)) best = {isle: islandOf(res, i), rem: rem, mode: "toWin"};
       }else if(st === "win"){
         var remE = eff.end - now;
-        if(!best || best.mode !== "inWin" || remE < best.rem) best = {isle: i, rem: remE, mode: "inWin"};
+        if(!best || best.mode !== "inWin" || remE < best.rem) best = {isle: islandOf(res, i), rem: remE, mode: "inWin"};
       }else if(st === "due"){
         dueCnt++;
-        if(firstDue < 0) firstDue = i;
+        if(firstDue < 0) firstDue = islandOf(res, i);
       }
     }
   });
@@ -1992,22 +2343,96 @@ function cnNumToInt(str){
   return 0;
 }
 
+/* ===== 快记解析 v2：支持“岛+几号计时器”，剩余时间写法不再局限 ===== */
+var CN_NUM = "(?:\\d+(?:\\.\\d+)?|[零〇一二两三四五六七八九十百半]+)";
+
+function cnToNum(str){
+  if(str === undefined || str === null || str === "") return 0;
+  str = String(str);
+  if(/^\d+(?:\.\d+)?$/.test(str)) return parseFloat(str);
+  if(str === "半") return 0.5;
+  var d = {"零":0,"〇":0,"一":1,"二":2,"两":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9};
+  if(str.indexOf("百") >= 0){
+    var p = str.split("百");
+    return (p[0] ? (d[p[0]] || 1) : 1) * 100 + (p[1] ? cnToNum(p[1].replace(/^零/, "")) : 0);
+  }
+  if(str.indexOf("十") >= 0){
+    var q = str.split("十");
+    return (q[0] ? (d[q[0]] || 1) : 1) * 10 + (q[1] ? (d[q[1]] || 0) : 0);
+  }
+  if(str.length === 1 && d[str] !== undefined) return d[str];
+  var n = 0;
+  for(var i = 0; i < str.length; i++){ if(d[str[i]] === undefined) return 0; n = n * 10 + d[str[i]]; }
+  return n;
+}
+
+/* 从文本里找出“一段时长”，返回 {sec, kind:'rem'|'ago', start, end} 或 null */
+function extractDuration(text){
+  var re = new RegExp("(" + CN_NUM + ")\\s*(个半|个)?\\s*(小时|钟头|时辰|时|hours?|hrs?|h|分钟|分钟|分|mins?|m|秒钟|秒|sec|s)(?![a-z])", "gi");
+  var toks = [], m;
+  while((m = re.exec(text))){
+    var u = m[3].toLowerCase(), v = cnToNum(m[1]), sec = 0;
+    if(/^(小时|钟头|时|hour|hours|hr|hrs|h|时辰)$/.test(u)){
+      sec = v * 3600 + (m[2] === "个半" ? 1800 : 0);
+      if(u === "时辰") sec = v * 7200;
+    }else if(/^(分钟|分|min|mins|m)$/.test(u)) sec = v * 60;
+    else sec = v;
+    toks.push({sec: sec, start: m.index, end: m.index + m[0].length, unit: u});
+  }
+  var kuai = /(一|二|两|三|四|\d)\s*刻钟?/.exec(text);
+  if(kuai && !toks.length){
+    toks.push({sec: cnToNum(kuai[1]) * 900, start: kuai.index, end: kuai.index + kuai[0].length, unit: "刻"});
+  }
+  if(!toks.length) return null;
+  // 合并相邻的 “1小时 30分 20秒”
+  var g = {sec: toks[0].sec, start: toks[0].start, end: toks[0].end, last: toks[0].unit};
+  for(var i = 1; i < toks.length; i++){
+    var gap = text.slice(g.end, toks[i].start);
+    if(/^[\s,，、和又零]*$/.test(gap)){ g.sec += toks[i].sec; g.end = toks[i].end; g.last = toks[i].unit; }
+    else break;
+  }
+  // “1小时30” —— 小时后面直接跟数字，按分钟算
+  if(/^(小时|钟头|时|h|hr|hrs|hour|hours)$/.test(g.last)){
+    var tail = /^\s*(\d{1,2})(?![\d\s]*(?:岛|号|点|:|：|个|小时|分|秒))/.exec(text.slice(g.end));
+    if(tail){ g.sec += parseInt(tail[1], 10) * 60; g.end += tail[0].length; }
+  }
+  return g;
+}
+
+function guessDurKind(text, d){
+  var before = text.slice(Math.max(0, d.start - 4), d.start);
+  var after = text.slice(d.end, d.end + 3);
+  if(/^\s*(之前|以前|前|钟前)/.test(after) || /(前|过去|已过|已经|过了|刚过)\s*$/.test(before)) return "ago";
+  if(/^\s*(后|之后|以后|内|就)/.test(after) || /(剩余|剩下|还剩|还有|还要|倒计时|剩|再)\s*$/.test(before)) return "rem";
+  return "rem"; // 只写了时长，默认当作“剩余”
+}
+
 function parseSmartCommand(rawText){
   var text = (rawText || "").trim();
-  if(!text) return { err: "请输入内容，如：黑曜石宝箱 1岛 刚刚" };
+  if(!text) return { err: "请输入内容，如：黑曜石宝箱 1岛2号 剩5分钟" };
 
   var now = Date.now();
   var isleIdx = qfSelectedIsle || 0;
   var isleSpecified = false;
+  var slotOrd = 1, slotSpecified = false;
 
-  var isleMatch = text.match(/(10|[1-9]|十|[一二三四五六七八九])\s*[号]?岛/);
-  if(isleMatch){
-    var n = cnNumToInt(isleMatch[1]);
-    if(n >= 1 && n <= ISLES){
-      isleIdx = n - 1;
-      isleSpecified = true;
-    }
-    text = text.replace(isleMatch[0], " ");
+  // 全角数字/冒号 → 半角
+  text = text.replace(/[０-９]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 65248); }).replace(/：/g, ":");
+
+  // 1) “几岛 + 几号计时器”：1岛2号 / 一岛第2个 / 1岛·2 / 1-2岛 都认
+  var slotRe = new RegExp("(10|[1-9]|十|[一二三四五六七八九])\\s*号?\\s*岛\\s*(?:(?:[·.\\-_#]|第)\\s*(\\d{1,2}|[一二两三四五六七八九十])\\s*(?:号|个)?|(\\d{1,2}|[一二两三四五六七八九十])\\s*(?:号|个|#)\\s*(?:计时器|计时)?)?");
+  var im = slotRe.exec(text);
+  if(im){
+    var n = cnToNum(im[1]);
+    if(n >= 1 && n <= ISLES){ isleIdx = n - 1; isleSpecified = true; }
+    var so = im[2] || im[3];
+    if(so){ slotOrd = Math.max(1, cnToNum(so)); slotSpecified = true; }
+    text = text.replace(im[0], " ");
+  }
+  // 只写“2号计时器 / 第2个计时器”
+  if(!slotSpecified){
+    var sm = /(?:第\s*(\d{1,2}|[一二两三四五六七八九十])\s*个?|(\d{1,2}|[一二两三四五六七八九十])\s*(?:号|个))\s*(?:计时器|计时)/.exec(text);
+    if(sm){ slotOrd = Math.max(1, cnToNum(sm[1] || sm[2])); slotSpecified = true; text = text.replace(sm[0], " "); }
   }
 
   var mode = "got";
@@ -2015,51 +2440,64 @@ function parseSmartCommand(rawText){
   var remSec = 0;
   var timeDesc = "刚刚捡到";
 
-  var remMatch = text.match(/(?:剩|剩余|还有)\s*(?:(\d+|[一二两三四五六七八九十半]+)\s*(?:小时|时|h))?\s*(?:(\d+|[一二两三四五六七八九十]+)\s*(?:分钟|分|m))?/i);
-  var clockMatch = text.match(/(\d{1,2})\s*[:：点时]\s*(\d{1,2})\s*分?(?:\s*捡到?)?/);
-  var agoHourMinMatch = text.match(/(?:前|过去)?\s*(\d+|[一二两三四五六七八九十半]+)\s*(?:小时|时|h)\s*(\d+|[一二两三四五六七八九十]+)?\s*(?:分钟|分)?(?:前|捡|刷)?/i);
-  var agoMinMatch = text.match(/(?:前\s*(\d+|[一二两三四五六七八九十半]+)\s*(?:分钟|分)|(\d+|[一二两三四五六七八九十半]+)\s*(?:分钟|分)\s*前)/);
-  var justNowMatch = text.match(/刚刚|刚才|刚捡|现在|才捡/);
+  var hasRemWord = /剩余|剩下|还剩|还有|还要|倒计时|剩|后刷|后到|后进/.test(text);
+  var justNowMatch = /刚刚|刚才|刚捡|现在|才捡|刚好/.exec(text);
 
-  if(remMatch && (remMatch[1] || remMatch[2])){
+  // 2) 钟点：14点30 / 14:30 捡到
+  var clockMatch = hasRemWord ? null : /(\d{1,2})\s*(?::|点)\s*(\d{1,2}|半)?\s*分?\s*(?:捡到?|刷了?|刷新)?/.exec(text);
+  // 3) h:m:s 倒计时格式
+  var hms = /(\d{1,2}):(\d{2}):(\d{2})/.exec(text);
+  var ms = (!hms && hasRemWord) ? /(\d{1,3}):(\d{2})/.exec(text) : null;
+
+  var dur = (!hms && !ms) ? extractDuration(text) : null;
+
+  if(hms){
     mode = "rem";
-    var rh = remMatch[1] ? cnNumToInt(remMatch[1]) : 0;
-    var rm = remMatch[2] ? cnNumToInt(remMatch[2]) : 0;
-    remSec = Math.round(rh * 3600 + rm * 60);
-    timeDesc = "设剩余时间 " + fmtMins(Math.round(remSec / 60));
-    text = text.replace(remMatch[0], " ");
-  }else if(clockMatch){
+    remSec = parseInt(hms[1], 10) * 3600 + parseInt(hms[2], 10) * 60 + parseInt(hms[3], 10);
+    text = text.replace(hms[0], " ");
+  }else if(ms){
+    mode = "rem";
+    remSec = parseInt(ms[1], 10) * 60 + parseInt(ms[2], 10);
+    text = text.replace(ms[0], " ");
+  }else if(clockMatch && !dur){
     var ch = Math.min(23, Math.max(0, parseInt(clockMatch[1], 10) || 0));
-    var cm = Math.min(59, Math.max(0, parseInt(clockMatch[2], 10) || 0));
+    var cmRaw = clockMatch[2];
+    var cm = cmRaw === "半" ? 30 : Math.min(59, Math.max(0, parseInt(cmRaw || "0", 10) || 0));
     var dNow = new Date(now);
     var target = new Date(dNow.getFullYear(), dNow.getMonth(), dNow.getDate(), ch, cm, 0, 0).getTime();
     if(target > now + 60000) target -= 86400000;
     gotTs = target;
     timeDesc = fmtShortClock(gotTs) + " 捡到";
     text = text.replace(clockMatch[0], " ");
-  }else if(agoMinMatch){
-    var mStr = agoMinMatch[1] || agoMinMatch[2];
-    var mins = (mStr === "半") ? 0.5 : cnNumToInt(mStr);
-    gotTs = now - Math.round(mins * 60000);
-    timeDesc = mins + "分钟前捡到 (" + fmtHM(gotTs) + ")";
-    text = text.replace(agoMinMatch[0], " ");
-  }else if(agoHourMinMatch){
-    var ah = agoHourMinMatch[1] ? cnNumToInt(agoHourMinMatch[1]) : 0;
-    var am = agoHourMinMatch[2] ? cnNumToInt(agoHourMinMatch[2]) : 0;
-    var totalAgoM = Math.round(ah * 60 + am);
-    gotTs = now - totalAgoM * 60000;
-    timeDesc = fmtMins(totalAgoM) + "前捡到 (" + fmtHM(gotTs) + ")";
-    text = text.replace(agoHourMinMatch[0], " ");
+  }else if(dur){
+    var kind = guessDurKind(text, dur);
+    if(kind === "rem"){
+      mode = "rem";
+      remSec = Math.round(dur.sec);
+    }else{
+      gotTs = now - Math.round(dur.sec * 1000);
+      timeDesc = fmtDurSec(dur.sec) + "前捡到 (" + fmtHM(gotTs) + ")";
+    }
+    text = text.slice(0, dur.start) + " " + text.slice(dur.end);
+  }else if(hasRemWord){
+    // “剩5”“还有10” —— 没写单位，当分钟
+    var bare = /(?:剩余|剩下|还剩|还有|还要|倒计时|剩)\s*(\d{1,3})(?!\s*[岛号点])/.exec(text);
+    if(bare){ mode = "rem"; remSec = parseInt(bare[1], 10) * 60; text = text.replace(bare[0], " "); }
   }else if(justNowMatch){
-    gotTs = now;
-    timeDesc = "刚刚捡到 (" + fmtHM(gotTs) + ")";
-    text = text.replace(justNowMatch[0], " ");
-  }else{
-    gotTs = now;
     timeDesc = "刚刚捡到 (" + fmtHM(gotTs) + ")";
   }
 
-  var keyword = text.replace(/捡到|捡了|刷了|刷新|记录|录入|的|在|了|，|。|,|\s+/g, "").trim();
+  if(mode === "got" && hasRemWord && !clockMatch && !dur && !justNowMatch){
+    return { err: "没看到具体时间，请写成：剩5分钟 / 剩1小时30分 / 剩1:30:00" };
+  }
+  if(mode === "rem") timeDesc = "设剩余时间 " + fmtDurSec(remSec);
+  if(justNowMatch) text = text.replace(justNowMatch[0], " ");
+  if(mode === "got" && timeDesc === "刚刚捡到") timeDesc = "刚刚捡到 (" + fmtHM(gotTs) + ")";
+
+  var keyword = text
+    .replace(/剩余|剩下|还剩|还有|还要|倒计时|计时器|计时|捡到|捡了|刷了|刷新|记录|录入|设置|设为|更新|改成|改为|的|在|了|，|。|,|\s+/g, "")
+    .replace(/^[号个第剩还再前后]+|[号个第剩还再前后]+$/g, "")
+    .trim();
 
   var list = currentResources();
   var matchedRes = null;
@@ -2095,7 +2533,7 @@ function parseSmartCommand(rawText){
   var newCat = "自定义", newSub = "";
   if(!matchedRes){
     if(!keyword){
-      return { err: "未识别到物品名称，请如：黑曜石宝箱 刚刚" };
+      return { err: "未识别到物品名称，请如：黑曜石宝箱 1岛2号 剩5分钟" };
     }
     var map = currentSubCatsMap();
     for(var catKey in map){
@@ -2113,6 +2551,14 @@ function parseSmartCommand(rawText){
     willCreateNew = true;
   }
 
+  // 该岛有几个计时器？号数超出就提示
+  if(matchedRes && slotOrd > slotsOfIsle(matchedRes, isleIdx).length){
+    return { err: matchedRes.name + " 的 " + (isleIdx + 1) + "岛 只有 " + slotsOfIsle(matchedRes, isleIdx).length + " 个计时器，没有 " + slotOrd + " 号（先在该岛点＋添加）" };
+  }
+  if(willCreateNew && slotOrd > 1){
+    return { err: "新物品只有 1 号计时器，请先添加后再记 " + slotOrd + " 号" };
+  }
+
   return {
     res: matchedRes,
     willCreateNew: willCreateNew,
@@ -2121,11 +2567,31 @@ function parseSmartCommand(rawText){
     newSub: newSub,
     isle: isleIdx,
     isleSpecified: isleSpecified,
+    slotOrd: slotOrd,
     mode: mode,
     gotTs: gotTs,
     remSec: remSec,
     timeDesc: timeDesc
   };
+}
+
+/* 某物质在某岛的全部计时槽下标：[主计时器, 额外1, 额外2…]，第 n 号 = 数组第 n 个 */
+function slotsOfIsle(res, isle){
+  var arr = [isle];
+  if(res && res.slotIsle){
+    for(var j = 0; j < res.slotIsle.length; j++){ if(res.slotIsle[j] === isle) arr.push(ISLES + j); }
+  }
+  return arr;
+}
+
+function fmtDurSec(sec){
+  sec = Math.max(0, Math.round(sec));
+  var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), r = sec % 60;
+  var out = "";
+  if(h) out += h + "小时";
+  if(m) out += m + "分";
+  if(r || !out) out += r + "秒";
+  return out;
 }
 
 function renderSmartConfirmModal(){
@@ -2134,6 +2600,8 @@ function renderSmartConfirmModal(){
   var dispName = p.res
     ? (p.res.name + (p.res.cat && p.res.cat !== "自定义" ? " (" + p.res.cat + ")" : ""))
     : (p.newName + " [新添2~6h物质]");
+  var _slots = p.res ? slotsOfIsle(p.res, p.isle) : [p.isle];
+  dispName += " · " + (p.isle + 1) + "岛" + (_slots.length > 1 ? " " + p.slotOrd + "号" : "");
   $("#scResName").textContent = dispName;
   $("#scTimeDesc").textContent = p.timeDesc;
 
@@ -2141,6 +2609,7 @@ function renderSmartConfirmModal(){
   if(p.mode === "rem"){
     var endTs = Date.now() + p.remSec * 1000;
     $("#scNextDesc").textContent = fmtWhen(endTs) + " 到点";
+    $("#scTimeDesc").textContent = "设剩余时间 " + fmtDurSec(p.remSec);
   }else{
     var winStart = p.gotTs + b[0] * 60000;
     var winEnd = p.gotTs + b[1] * 60000;
@@ -2159,11 +2628,28 @@ function renderSmartConfirmModal(){
     (function(idx){
       btn.addEventListener("click", function(){
         pendingSmartAction.isle = idx;
+        pendingSmartAction.slotOrd = 1;
         renderSmartConfirmModal();
       });
     })(i);
     grid.appendChild(btn);
   }
+  var slotWrap = $("#scSlotWrap"), slotGrid = $("#scSlotGrid");
+  slotGrid.innerHTML = "";
+  var slots = p.res ? slotsOfIsle(p.res, p.isle) : [p.isle];
+  slotWrap.hidden = slots.length < 2;
+  if(p.slotOrd > slots.length) p.slotOrd = 1;
+  slots.forEach(function(si, k){
+    var sb = document.createElement("button");
+    sb.type = "button";
+    sb.className = "parse-isle" + ((k + 1) === p.slotOrd ? " on" : "");
+    sb.textContent = (k + 1) + "号";
+    sb.addEventListener("click", function(){
+      pendingSmartAction.slotOrd = k + 1;
+      renderSmartConfirmModal();
+    });
+    slotGrid.appendChild(sb);
+  });
 }
 
 function triggerSmartInput(inputEl){
@@ -2201,7 +2687,8 @@ $("#scOkBtn").addEventListener("click", function(){
     };
     currentResources().unshift(targetRes);
   }
-  var i = p.isle;
+  var slotList = slotsOfIsle(targetRes, p.isle);
+  var i = slotList[Math.max(0, Math.min(slotList.length - 1, (p.slotOrd || 1) - 1))];
   var key = targetRes.id + ":" + i;
   var now = Date.now();
   if(!Array.isArray(targetRes.customEnd)) targetRes.customEnd = new Array(ISLES).fill(null);
@@ -2223,7 +2710,7 @@ $("#scOkBtn").addEventListener("click", function(){
     activeSubTab = targetRes.subcat;
   }
   qfSelectedResId = targetRes.id;
-  qfSelectedIsle = i;
+  qfSelectedIsle = p.isle;
   delete loopCache[key];
   delete recentLoopAt[key];
 
@@ -2235,7 +2722,8 @@ $("#scOkBtn").addEventListener("click", function(){
   renderTabs();
   render();
   unlockAudio();
-  showToast("✓ 已更新 " + targetRes.name + " · " + (i + 1) + "岛");
+  showToast("✓ 已更新 " + targetRes.name + " · " + slotLabel(targetRes, i) + (p.mode === "rem" ? " 剩" + fmtDurSec(p.remSec) : ""));
+  if(p.mode === "rem") pushStatusNotice("已设置 " + targetRes.name + "·" + slotLabel(targetRes, i), "剩余 " + fmtDurSec(p.remSec) + "，到点会提醒你");
 });
 
 $("#scCancelBtn").addEventListener("click", function(){
@@ -2294,9 +2782,72 @@ function toggleIsleLoop(id, i){
   saveActive(); render();
 }
 
+function addExtraSlot(id, island){
+  var res = byId(id); if(!res) return;
+  if(!Array.isArray(res.slotIsle)) res.slotIsle = [];
+  if(res.slotIsle.length >= 30){ showToast("最多额外添加30个计时器"); return; }
+  res.slotIsle.push(island);
+  res.starts.push(null);
+  res.loops.push(null);
+  res.customEnd.push(null);
+  if(!Array.isArray(res.notes)) res.notes = [];
+  while(res.notes.length < slotCount(res) - 1) res.notes.push("");
+  res.notes.push("");
+  res.open = true;
+  groupOpen[id + ":" + island] = true;
+  saveActive(); render();
+  showToast("已为 " + (island + 1) + "岛 添加一个计时器");
+}
+function removeSlot(res, i){
+  var j = i - ISLES;
+  res.starts.splice(i, 1);
+  res.loops.splice(i, 1);
+  res.customEnd.splice(i, 1);
+  if(Array.isArray(res.notes)) res.notes.splice(i, 1);
+  res.slotIsle.splice(j, 1);
+  dropKeys(res.id + ":");
+  var now = Date.now();
+  for(var k = 0; k < slotCount(res); k++){
+    var eff = effectiveStart(res, k, now);
+    if(!eff) continue;
+    var wb = res.id + ":" + k + ":" + eff.start;
+    var st = isleStateAt(eff, now);
+    if(st === "run" && (eff.hasWin ? eff.winStart : eff.end) - now <= 300000) warned[wb + ":a"] = 1;
+    if(st === "win" && eff.end - now <= 300000) warned[wb + ":b"] = 1;
+  }
+}
+function editNote(rid, i, el){
+  var res = byId(rid); if(!res) return;
+  var inp = document.createElement("input");
+  inp.type = "text";
+  inp.className = "isle-note-inp";
+  inp.maxLength = 60;
+  inp.value = getNote(res, i);
+  inp.placeholder = "备注，如：在哪里捡到的";
+  el.replaceWith(inp);
+  inp.focus();
+  var done = false;
+  inp.addEventListener("blur", function(){
+    if(done) return;
+    done = true;
+    setNote(res, i, inp.value);
+    saveActive(); render();
+  });
+  inp.addEventListener("keydown", function(ev){
+    if(ev.key === "Enter"){ ev.preventDefault(); inp.blur(); }
+    else if(ev.key === "Escape"){ done = true; render(); }
+  });
+}
 function clearIsle(id, i){
   var res = byId(id); if(!res) return;
-  askConfirm("清空岛计时", "确定清空「" + res.name + " · " + (i + 1) + "岛」的计时吗？", function(){
+  if(i >= ISLES){
+    askConfirm("删除计时器", "确定删除「" + res.name + " · " + slotLabel(res, i) + "」这个计时器吗？", function(){
+      removeSlot(res, i);
+      saveActive(); render();
+    });
+    return;
+  }
+  askConfirm("清空岛计时", "确定清空「" + res.name + " · " + slotLabel(res, i) + "」的计时吗？", function(){
     var key = id + ":" + i;
     res.starts[i] = null;
     if(Array.isArray(res.customEnd)) res.customEnd[i] = null;
@@ -2340,27 +2891,28 @@ function tick(){
   for(var r = 0; r < resourcesList.length; r++){
     var res = resourcesList[r];
     var dueIsles = [], winIsles = [], recorded = 0, best = null;
-    for(var i = 0; i < ISLES; i++){
+    var nSlots = slotCount(res);
+    for(var i = 0; i < nSlots; i++){
       var key = res.id + ":" + i;
       var looping = effLoop(res, i);
       var eff = effectiveStart(res, i, now);
       var st = eff ? isleStateAt(eff, now) : "idle";
       var prev = rowState[key];
-      var label = res.name + "·" + (i + 1) + "岛";
+      var label = res.name + "·" + slotLabel(res, i);
       var at = eff ? eff.end : 0;
       if(st !== "idle") recorded++;
       if(st === "run"){
         var remToWin = (eff.hasWin ? eff.winStart : eff.end) - now;
-        if(!best || remToWin < best.rem) best = {isle: i, rem: remToWin, mode: eff.hasWin ? "toWin" : "toEnd"};
+        if(!best || remToWin < best.rem) best = {isle: islandOf(res, i), rem: remToWin, mode: eff.hasWin ? "toWin" : "toEnd"};
       }else if(st === "win"){
-        winIsles.push(i);
+        winIsles.push(islandOf(res, i));
         winAll.push(label);
         var remEnd = at - now;
         if(!best || best.mode !== "inWin" || remEnd < best.rem){
-          best = {isle: i, rem: remEnd, mode: "inWin"};
+          best = {isle: islandOf(res, i), rem: remEnd, mode: "inWin"};
         }
       }else if(st === "due"){
-        dueIsles.push(i);
+        dueIsles.push(islandOf(res, i));
         dueAll.push(label);
       }
 
@@ -2400,6 +2952,7 @@ function tick(){
       var row = listEl.querySelector('.isle-row[data-rid="' + res.id + '"][data-isle="' + i + '"]');
       if(row) patchIsle(row, res, i, st, now, eff);
     }
+    if(res.slotIsle && res.slotIsle.length) patchGroupHeads(res, now);
     var trunk = listEl.querySelector('.trunk[data-rid="' + res.id + '"]');
     if(trunk) patchTrunk(trunk, res, dueIsles, winIsles, recorded, best);
   }
@@ -2496,10 +3049,10 @@ function patchTrunk(trunk, res, dueIsles, winIsles, recorded, best){
   var el = trunk.querySelector(".summary");
   var text, cls = "";
   if(dueIsles.length){
-    text = dueIsles.map(function(i){ return (i + 1) + "岛"; }).join(" ") + " 到点";
+    text = dueIsles.filter(function(v, ix, a){ return a.indexOf(v) === ix; }).map(function(i){ return (i + 1) + "岛"; }).join(" ") + " 到点";
     cls = "due";
   }else if(winIsles.length){
-    text = winIsles.map(function(i){ return (i + 1) + "岛"; }).join(" ") + " 刷新窗 (" + fmtRemain(best.rem) + ")";
+    text = winIsles.filter(function(v, ix, a){ return a.indexOf(v) === ix; }).map(function(i){ return (i + 1) + "岛"; }).join(" ") + " 刷新窗 (" + fmtRemain(best.rem) + ")";
     cls = "t-yellow";
   }else if(best){
     var prefix = best.mode === "toWin" ? "进窗 " : "";
@@ -2583,6 +3136,7 @@ function resetForm(){
   sSubCatNew.value = "";
   fillSubCatSelect();
   sLoop.checked = false;
+  $("#sMulti").checked = false;
   hideErr();
   syncForm();
 }
@@ -2638,6 +3192,9 @@ function add(){
   res.loops = new Array(ISLES).fill(null);
   res.starts = new Array(ISLES).fill(null);
   res.customEnd = new Array(ISLES).fill(null);
+  res.notes = new Array(ISLES).fill("");
+  res.slotIsle = [];
+  res.multi = $("#sMulti").checked || /遗迹钻头/.test(name);
 
   currentResources().unshift(res);
   if(catVal && catVal !== "自定义" && subVal){
@@ -2664,6 +3221,7 @@ sheetEl.addEventListener("keydown", function(e){
 
 /* 模式切换与团队云同步逻辑 */
 var teamCard = $("#teamCard");
+var codeCard = $("#codeCard");
 var tabModeLocal = $("#tabModeLocal");
 var tabModeTeam = $("#tabModeTeam");
 var modeBadge = $("#modeBadge");
@@ -2675,12 +3233,14 @@ function applyModeUI(){
     modeBadge.className = "badge-mode team";
     modeBadge.textContent = "小队";
     teamCard.hidden = false;
+    codeCard.hidden = true;
   }else{
     tabModeLocal.className = "mode-tab on";
     tabModeTeam.className = "mode-tab";
     modeBadge.className = "badge-mode";
     modeBadge.textContent = "本地";
     teamCard.hidden = true;
+    codeCard.hidden = false;
   }
   activeTab = currentMode === "team" ? teamData.tab : localData.tab;
   activeSubTab = currentMode === "team" ? teamData.subTab : localData.subTab;
@@ -2720,7 +3280,8 @@ function packStatePayload(includeRoom, store, withImgs){
         id: x.id, name: x.name, cat: x.cat, subcat: x.subcat || "", kind: x.kind,
         base: x.base, early: x.early, late: x.late,
         loop: x.loop, loops: x.loops, open: x.open,
-        starts: x.starts, customEnd: x.customEnd
+        starts: x.starts, customEnd: x.customEnd,
+        notes: x.notes, slotIsle: x.slotIsle, multi: x.multi
       };
     })
   };
@@ -3228,6 +3789,7 @@ document.addEventListener("resume", resumeSync);
 loadAll();
 updateSoundBtn();
 updateNotifyBtn();
+nativeInit();
 applyModeUI();
 
 squads.forEach(function(q){
@@ -3236,13 +3798,15 @@ squads.forEach(function(q){
 });
 if(activeSquad) $("#roomCodeInp").value = activeSquad;
 updateRoomUI();
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+restoreSquadsIfLost();
 
 var now0 = Date.now();
 var alertOnLoad = false;
 var initResList = currentResources();
 for(var r = 0; r < initResList.length; r++){
   var any = false;
-  for(var i = 0; i < ISLES; i++){
+  for(var i = 0; i < slotCount(initResList[r]); i++){
     var key0 = initResList[r].id + ":" + i;
     var eff0 = effectiveStart(initResList[r], i, now0);
     var st0 = eff0 ? isleStateAt(eff0, now0) : "idle";
