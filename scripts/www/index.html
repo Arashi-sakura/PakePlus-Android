@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>星象嵌合求解器</title>
+<style>
+:root {
+  --bg: #F5F5F7;
+  --card: #FFFFFF;
+  --line: #E5E5EA;
+  --cellEmpty: #F2F2F7;
+  --cellBorder: #D1D1D6;
+  --red: #FF3B30;
+  --text: #1D1D1F;
+  --muted: #86868B;
+  --accent: #000000;
+  --btnBg: #F2F2F7;
+  --btnBorder: #E5E5EA;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 4px 0 6px;
+  color: var(--text);
+}
+
+.sub {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+section {
+  background: var(--card);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+section h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.section-header h2 {
+  margin: 0;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--text);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+button {
+  background: var(--btnBg);
+  color: var(--text);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.25, 0.1, 0.25, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+button:hover {
+  background: #E8E8ED;
+}
+
+button:active {
+  transform: scale(0.97);
+  background: #DCDCE2;
+}
+
+button.primary {
+  background: var(--accent);
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+button.primary:hover {
+  background: #2C2C2E;
+}
+
+button.primary:active {
+  background: #3A3A3C;
+}
+
+button.outline {
+  background: #FFFFFF;
+  color: var(--text);
+  border: 1px solid #D1D1D6;
+}
+
+button.outline:hover {
+  background: #F5F5F7;
+}
+
+button.danger {
+  background: #FFF2F2;
+  color: var(--red);
+  border: 1px solid #FFD8D6;
+}
+
+button.danger:hover {
+  background: #FFE5E5;
+}
+
+button.small {
+  padding: 6px 11px;
+  font-size: 12px;
+  border-radius: 8px;
+}
+
+.board8 {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 5px;
+  padding: 6px;
+  background: #FAFAFC;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+}
+
+.cell {
+  aspect-ratio: 1;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #1D1D1F;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s ease, background-color 0.15s ease;
+}
+
+.cell:active {
+  transform: scale(0.92);
+}
+
+.cell.off {
+  background: transparent;
+  border: 1px dashed #E0E0E6;
+}
+
+.cell.on {
+  background: var(--cellEmpty);
+  border: 1px solid var(--cellBorder);
+}
+
+.cell.X {
+  background: #FFF0EF;
+  color: var(--red);
+  border: 1px solid #FFC7C4;
+  font-size: 13px;
+  cursor: default;
+}
+
+.cell.filled {
+  cursor: default;
+  color: #111;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+.editor-area {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin: 10px 0 14px;
+  flex-wrap: wrap;
+}
+
+.mini4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  width: 112px;
+  padding: 6px;
+  background: #FAFAFC;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.mini4 .c {
+  aspect-ratio: 1;
+  border-radius: 5px;
+  cursor: pointer;
+  background: var(--cellEmpty);
+  border: 1px solid var(--cellBorder);
+  transition: all 0.12s ease;
+}
+
+.mini4 .c.on {
+  background: var(--pickColor, #bd93f9);
+  border-color: rgba(0,0,0,0.2);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.colorPicker {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
+.swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.swatch.sel {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 2px var(--text);
+}
+
+.pieceList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.pieceCard {
+  background: #FAFAFC;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px;
+  width: 78px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  transition: box-shadow 0.15s ease;
+}
+
+.pieceCard .mini {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  width: 48px;
+  margin: 0 auto 6px;
+}
+
+.pieceCard .mini div {
+  aspect-ratio: 1;
+  border-radius: 2.5px;
+}
+
+.pieceCard .mini div.off {
+  background: #EFEFF4;
+}
+
+/* Segmented Control for Plan Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+  background: #EFEFF4;
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 6px;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab.active {
+  background: #FFFFFF;
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.stat {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  margin: 12px 0 14px;
+  background: #FAFAFC;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 8px;
+}
+
+.stat div {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.stat b {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.legend {
+  background: #FAFAFC;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.legend .row {
+  margin: 4px 0;
+  font-size: 12px;
+}
+
+.legend-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.swatchS {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.note {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+  line-height: 1.6;
+}
+
+#log {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: pre-wrap;
+  line-height: 1.6;
+  margin-top: 10px;
+  padding: 0 4px;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Dynamic Island Toast */
+#toast {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: rgba(29, 29, 31, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #FFFFFF;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 9999;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+<div id="toast">提示信息</div>
+
+<div class="wrap">
+  <header>
+    <h1>星象嵌合求解器</h1>
+    <div class="sub">棋盘与方块自由编辑 · 智能排布求解 · 一键导出长图</div>
+  </header>
+
+  <section>
+    <h2><span class="step-badge">1</span> 棋盘配置（点击格子切换启用/禁用）</h2>
+    <div class="board8" id="boardEdit"></div>
+    <div class="row" style="margin-top:12px;">
+      <button class="small" id="resetDiamond">恢复默认菱形 (40格)</button>
+      <button class="small" id="clearBoard">清空棋盘</button>
+      <button class="small" id="fillBoard">全部启用</button>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="step-badge">2</span> 方块库（点 4×4 格画形状，固定朝向）</h2>
+    <div class="colorPicker" id="colorPicker"></div>
+    <div class="editor-area">
+      <div class="mini4" id="pieceEdit"></div>
+      <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:140px;">
+        <button class="primary" id="addPiece">+ 添加到方块库</button>
+        <div class="row">
+          <button class="small" id="clearMini" style="flex:1;">清空画板</button>
+          <button class="small danger" id="clearAllPieces" style="flex:1;">清空方块库</button>
+        </div>
+      </div>
+    </div>
+    <div class="pieceList" id="pieceList"></div>
+  </section>
+
+  <section>
+    <button class="primary" id="solveBtn" style="width:100%;padding:13px;font-size:15px;border-radius:12px;">
+      开始求解方案
+    </button>
+    <div id="log"></div>
+  </section>
+
+  <section id="resultSection" class="hidden">
+    <div class="section-header">
+      <h2><span class="step-badge">3</span> 求解结果</h2>
+      <button class="small outline" id="saveImgBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        保存结果为图片
+      </button>
+    </div>
+    <div class="tabs" id="planTabs"></div>
+    <div class="stat" id="stat"></div>
+    <div class="board8" id="boardResult"></div>
+    <div class="legend" id="legend" style="margin-top:12px;"></div>
+  </section>
+</div>
+
+<script>
+/* ---------- 轻提示弹窗 ---------- */
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+/* ---------- 棋盘编辑 ---------- */
+const N = 8;
+let boardActive = []; // [r][c] bool
+function diamondPreset(){
+  const rows = {0:[3,4],1:[2,3,4,5],2:[1,2,3,4,5,6],3:[0,1,2,3,4,5,6,7],
+                4:[0,1,2,3,4,5,6,7],5:[1,2,3,4,5,6],6:[2,3,4,5],7:[3,4]};
+  const b = [];
+  for(let r=0;r<N;r++){
+    b.push([]);
+    for(let c=0;c<N;c++) b[r].push(rows[r] && rows[r].includes(c));
+  }
+  return b;
+}
+boardActive = diamondPreset();
+
+const boardEditEl = document.getElementById('boardEdit');
+function renderBoardEdit(){
+  boardEditEl.innerHTML='';
+  for(let r=0;r<N;r++) for(let c=0;c<N;c++){
+    const d=document.createElement('div');
+    d.className='cell '+(boardActive[r][c]?'on':'off');
+    d.addEventListener('click',()=>{ boardActive[r][c]=!boardActive[r][c]; renderBoardEdit(); });
+    boardEditEl.appendChild(d);
+  }
+}
+renderBoardEdit();
+document.getElementById('resetDiamond').onclick=()=>{ boardActive=diamondPreset(); renderBoardEdit(); showToast('已恢复默认40格菱形'); };
+document.getElementById('clearBoard').onclick=()=>{ boardActive=Array.from({length:N},()=>Array(N).fill(false)); renderBoardEdit(); };
+document.getElementById('fillBoard').onclick=()=>{ boardActive=Array.from({length:N},()=>Array(N).fill(true)); renderBoardEdit(); };
+
+/* ---------- 方块编辑 ---------- */
+const COLORS = ['#bd93f9','#3ca0e1','#46d278','#ffcf40','#ff8fa3','#ff9f40'];
+let pickColor = COLORS[0];
+const colorPickerEl = document.getElementById('colorPicker');
+COLORS.forEach((col,i)=>{
+  const s=document.createElement('div');
+  s.className='swatch'+(i===0?' sel':'');
+  s.style.background=col;
+  s.onclick=()=>{ pickColor=col;
+    [...colorPickerEl.children].forEach(x=>x.classList.remove('sel'));
+    s.classList.add('sel');
+    document.documentElement.style.setProperty('--pickColor',col);
+    renderMini();
+  };
+  colorPickerEl.appendChild(s);
+});
+document.documentElement.style.setProperty('--pickColor',pickColor);
+
+let miniGrid = Array.from({length:4},()=>Array(4).fill(false));
+const pieceEditEl = document.getElementById('pieceEdit');
+function renderMini(){
+  pieceEditEl.innerHTML='';
+  for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+    const d=document.createElement('div');
+    d.className='c'+(miniGrid[r][c]?' on':'');
+    if(miniGrid[r][c]) d.style.background=pickColor;
+    d.addEventListener('click',()=>{ miniGrid[r][c]=!miniGrid[r][c]; renderMini(); });
+    pieceEditEl.appendChild(d);
+  }
+}
+renderMini();
+document.getElementById('clearMini').onclick=()=>{ miniGrid=Array.from({length:4},()=>Array(4).fill(false)); renderMini(); };
+
+let pieces = []; // {id,name,cells:[[r,c],...] normalized, color}
+let pieceCounter = 0;
+function normalizeCells(cellsArr){
+  const minr=Math.min(...cellsArr.map(p=>p[0]));
+  const minc=Math.min(...cellsArr.map(p=>p[1]));
+  return cellsArr.map(p=>[p[0]-minr,p[1]-minc]);
+}
+document.getElementById('addPiece').onclick=()=>{
+  const cells=[];
+  for(let r=0;r<4;r++) for(let c=0;c<4;c++) if(miniGrid[r][c]) cells.push([r,c]);
+  if(cells.length!==4){
+    showToast('请画出一个正好 4 格的形状（四连方块）');
+    return;
+  }
+  pieceCounter++;
+  pieces.push({id:pieceCounter, name:'#'+pieceCounter, cells:normalizeCells(cells), color:pickColor});
+  miniGrid=Array.from({length:4},()=>Array(4).fill(false));
+  renderMini();
+  renderPieceList();
+  showToast(`已添加方块 #${pieceCounter}`);
+};
+function renderPieceList(){
+  const el=document.getElementById('pieceList');
+  el.innerHTML='';
+  pieces.forEach(p=>{
+    const card=document.createElement('div');
+    card.className='pieceCard';
+    const mini=document.createElement('div');
+    mini.className='mini';
+    for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+      const on = p.cells.some(x=>x[0]===r&&x[1]===c);
+      const dd=document.createElement('div');
+      dd.className=on?'':'off';
+      if(on) dd.style.background=p.color;
+      mini.appendChild(dd);
+    }
+    card.appendChild(mini);
+    const lab=document.createElement('div');
+    lab.textContent=p.name;
+    card.appendChild(lab);
+    const del=document.createElement('button');
+    del.className='small danger';
+    del.textContent='删除';
+    del.style.marginTop='5px';
+    del.style.width='100%';
+    del.style.padding='4px 0';
+    del.onclick=()=>{ pieces=pieces.filter(x=>x.id!==p.id); renderPieceList(); };
+    card.appendChild(del);
+    el.appendChild(card);
+  });
+}
+let clearAllArmed = false;
+let clearAllTimer = null;
+const clearAllBtn = document.getElementById('clearAllPieces');
+clearAllBtn.onclick=()=>{
+  if(pieces.length===0) {
+    showToast('方块库已经是空的');
+    return;
+  }
+  if(!clearAllArmed){
+    clearAllArmed = true;
+    clearAllBtn.textContent = '再点确认清空';
+    clearAllTimer = setTimeout(()=>{ clearAllArmed=false; clearAllBtn.textContent='清空方块库'; }, 3000);
+    return;
+  }
+  clearTimeout(clearAllTimer);
+  clearAllArmed = false;
+  clearAllBtn.textContent = '清空方块库';
+  pieces=[];
+  renderPieceList();
+  showToast('已清空方块库');
+};
+
+/* ---------- 求解算法 ---------- */
+function cellKey(r,c){return r+','+c;}
+
+function getBoardCells(){
+  const cells=[];
+  for(let r=0;r<N;r++) for(let c=0;c<N;c++) if(boardActive[r][c]) cells.push([r,c]);
+  return cells;
+}
+function getPlacements(piece, boardSet){
+  const plc=[];
+  const maxR=Math.max(...piece.cells.map(x=>x[0]));
+  const maxC=Math.max(...piece.cells.map(x=>x[1]));
+  for(let r0=0;r0<N;r0++) for(let c0=0;c0<N;c0++){
+    if(r0+maxR>=N||c0+maxC>=N) continue;
+    const cells = piece.cells.map(([dr,dc])=>[r0+dr,c0+dc]);
+    if(cells.every(([r,c])=>boardSet.has(cellKey(r,c)))){
+      plc.push(cells);
+    }
+  }
+  return plc;
+}
+
+let nodeCount = 0;
+function timeUp(){
+  nodeCount++;
+  return false;
+}
+
+function buildGroups(placementsByPiece){
+  const map = new Map();
+  pieces.forEach(p=>{
+    const key = JSON.stringify(p.cells)+'|'+p.color;
+    if(!map.has(key)) map.set(key, {key, placements:placementsByPiece[p.id], count:0, pieceIds:[], color:p.color});
+    const g = map.get(key);
+    g.count++; g.pieceIds.push(p.id);
+  });
+  return [...map.values()].sort((a,b)=>a.placements.length-b.placements.length);
+}
+function pieceById(id){ return pieces.find(p=>p.id===id); }
+
+function qualityWeight(group){
+  const c = (group.color||'').toLowerCase();
+  if(c==='#bd93f9') return 1000000; // 紫
+  if(c==='#3ca0e1') return 1000;    // 蓝
+  if(c==='#46d278') return 1;       // 绿
+  return 1;
+}
+function equalWeight(){ return 1; }
+
+function canTile(emptySet, k){
+  if(timeUp()) return null;
+  if(emptySet.size!==4*k) return null;
+  if(k===0) return [];
+  const target=[...emptySet][0];
+  const results=[];
+  const seenShapes=new Set();
+  function grow(shapeArr, shapeSet){
+    if(shapeArr.length===4){
+      const key=[...shapeSet].sort().join('|');
+      if(!seenShapes.has(key)){ seenShapes.add(key); results.push(new Set(shapeSet)); }
+      return;
+    }
+    for(const cellStr of shapeArr){
+      const [r,c]=cellStr.split(',').map(Number);
+      for(const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const nb=(r+dr)+','+(c+dc);
+        if(emptySet.has(nb) && !shapeSet.has(nb)){
+          shapeSet.add(nb);
+          grow([...shapeArr,nb], shapeSet);
+          shapeSet.delete(nb);
+        }
+      }
+    }
+  }
+  grow([target], new Set([target]));
+  for(const piece of results){
+    const rest2 = new Set([...emptySet].filter(x=>!piece.has(x)));
+    const rest = canTile(rest2, k-1);
+    if(rest!==null) return [piece, ...rest];
+    if(timeUp()) return null;
+  }
+  return null;
+}
+
+function exactCover(boardCells, placementsByPiece){
+  nodeCount=0;
+  function solve(empty, used, placed){
+    if(timeUp()) return 'TIMEOUT';
+    if(empty.size===0) return true;
+    const target=[...empty].sort()[0];
+    for(const p of pieces){
+      if(used.has(p.id)) continue;
+      for(const cells of placementsByPiece[p.id]){
+        const keys=cells.map(([r,c])=>cellKey(r,c));
+        if(!keys.includes(target)) continue;
+        if(keys.every(k=>empty.has(k))){
+          used.add(p.id); placed.push({piece:p, cells});
+          const newEmpty=new Set(empty); keys.forEach(k=>newEmpty.delete(k));
+          const r=solve(newEmpty, used, placed);
+          if(r===true) return true;
+          if(r==='TIMEOUT') return 'TIMEOUT';
+          placed.pop(); used.delete(p.id);
+        }
+      }
+    }
+    return false;
+  }
+  const boardSet = new Set(boardCells.map(([r,c])=>cellKey(r,c)));
+  const placed=[];
+  const r = solve(boardSet, new Set(), placed);
+  return r===true ? placed : (r==='TIMEOUT' ? 'TIMEOUT' : null);
+}
+
+function expandGroupUsage(groupUsage){
+  const result=[];
+  groupUsage.forEach(({group, cellsList})=>{
+    cellsList.forEach((cells, idx)=>{
+      result.push({piece: pieceById(group.pieceIds[idx]), cells});
+    });
+  });
+  return result;
+}
+
+function groupSearch(groups, boardCells, mode, opts){
+  const boardKeySet = new Set(boardCells.map(([r,c])=>cellKey(r,c)));
+  const weightFn = opts.weightFn || equalWeight;
+  let best = {score:-1, count:0, usage:null};
+  let found = null;
+
+  function tryFromGroup(gi, startIdx, remaining, occ, usage, usedCount, score){
+    if(timeUp()) return 'TIMEOUT';
+    if(mode==='max'){
+      let upper = score + (gi<groups.length ? remaining*weightFn(groups[gi]) : 0);
+      for(let j=gi+1;j<groups.length;j++) upper += groups[j].count*weightFn(groups[j]);
+      if(upper<=best.score) return;
+    } else {
+      let upperCount = usedCount + remaining;
+      for(let j=gi+1;j<groups.length;j++) upperCount += groups[j].count;
+      if(upperCount<opts.u) return;
+    }
+    if(gi===groups.length){
+      if(mode==='max'){
+        if(score>best.score){ best.score=score; best.count=usedCount; best.usage=usage.map(u=>({group:u.group, cellsList:u.cellsList.slice()})); }
+        return;
+      } else {
+        if(usedCount===opts.u){
+          const leftover = new Set([...boardKeySet].filter(x=>!occ.has(x)));
+          const tiling = canTile(leftover, opts.k);
+          if(tiling){ found = {usage: usage.map(u=>({group:u.group, cellsList:u.cellsList.slice()})), newPieces: tiling}; return 'STOP'; }
+        }
+        return;
+      }
+    }
+    const g = groups[gi];
+    const nextRemaining = groups[gi+1] ? groups[gi+1].count : 0;
+    let r = tryFromGroup(gi+1, 0, nextRemaining, occ, usage, usedCount, score);
+    if(r==='TIMEOUT'||r==='STOP') return r;
+    if(remaining>0){
+      const w = weightFn(g);
+      for(let idx=startIdx; idx<g.placements.length; idx++){
+        const cells = g.placements[idx];
+        const keys = cells.map(([r2,c2])=>cellKey(r2,c2));
+        let ok=true;
+        for(const kk of keys) if(occ.has(kk)){ ok=false; break; }
+        if(!ok) continue;
+        const newOcc = new Set(occ); keys.forEach(kk=>newOcc.add(kk));
+        let entry = usage.find(u=>u.group===g);
+        if(!entry){ entry={group:g, cellsList:[]}; usage.push(entry); }
+        entry.cellsList.push(cells);
+        if(mode==='exactU' && usedCount+1>opts.u){ entry.cellsList.pop(); if(entry.cellsList.length===0) usage.pop(); continue; }
+        const rr = tryFromGroup(gi, idx+1, remaining-1, newOcc, usage, usedCount+1, score+w);
+        entry.cellsList.pop();
+        if(entry.cellsList.length===0) usage.pop();
+        if(rr==='TIMEOUT'||rr==='STOP') return rr;
+      }
+    }
+    return;
+  }
+
+  nodeCount=0;
+  const r = tryFromGroup(0, 0, groups[0]?groups[0].count:0, new Set(), [], 0, 0);
+  if(mode==='max'){
+    return { count: best.count, sol: best.usage ? expandGroupUsage(best.usage) : [], timeout: r==='TIMEOUT' };
+  } else {
+    return found ? { used: expandGroupUsage(found.usage), newPieces: found.newPieces.map(s=>[...s].map(x=>x.split(',').map(Number))) }
+                 : (r==='TIMEOUT' ? 'TIMEOUT' : null);
+  }
+}
+
+function maxCoverage(boardCells, placementsByPiece){
+  const groups = buildGroups(placementsByPiece);
+  return groupSearch(groups, boardCells, 'max', {weightFn: equalWeight});
+}
+
+function maxCoverageQuality(boardCells, placementsByPiece){
+  const groups = buildGroups(placementsByPiece);
+  return groupSearch(groups, boardCells, 'max', {weightFn: qualityWeight});
+}
+
+function useExactlyWithTileCheck(boardCells, placementsByPiece, u, k){
+  const groups = buildGroups(placementsByPiece);
+  return groupSearch(groups, boardCells, 'exactU', {u,k});
+}
+
+/* ---------- 主求解流程 ---------- */
+let lastResult = null;
+let currentActivePlan = null;
+
+document.getElementById('solveBtn').onclick = ()=>{
+  const logEl=document.getElementById('log');
+  logEl.textContent='正在计算最优嵌合方案...';
+  setTimeout(runSolve, 30);
+};
+
+function runSolve(){
+  const logEl=document.getElementById('log');
+  const boardCells = getBoardCells();
+  const boardN = boardCells.length;
+  if(boardN===0){ logEl.textContent='棋盘是空的，请先在步骤 1 点击格子启用棋盘。'; showToast('请先启用棋盘格子'); return; }
+  if(pieces.length===0){ logEl.textContent='还没有任何方块，请先在步骤 2 添加方块。'; showToast('请先添加至少一个方块'); return; }
+
+  const boardSet = new Set(boardCells.map(([r,c])=>cellKey(r,c)));
+  const placementsByPiece={};
+  pieces.forEach(p=>{ placementsByPiece[p.id]=getPlacements(p, boardSet); });
+
+  let logLines=[];
+  logLines.push(`棋盘格数: ${boardN} ｜ 方块总数: ${pieces.length}`);
+  const t0 = Date.now();
+
+  const T = boardN/4;
+  let plans = {};
+
+  if(Number.isInteger(T)){
+    const exact = exactCover(boardCells, placementsByPiece);
+    if(exact){
+      plans.A = {label:'完美覆盖（精确解）', used:exact, empty:[], newPieces:[]};
+      logLines.push('✓ 找到精确覆盖，0 空格完美嵌合！');
+    }
+  } else {
+    logLines.push('提示：棋盘格数不是 4 的倍数，无法被四连方块完全铺满。');
+  }
+
+  if(!plans.A){
+    const mc = maxCoverage(boardCells, placementsByPiece);
+    const usedKeys = new Set();
+    mc.sol.forEach(u=>u.cells.forEach(([r,c])=>usedKeys.add(cellKey(r,c))));
+    const empty = boardCells.filter(([r,c])=>!usedKeys.has(cellKey(r,c)));
+    plans.A = {label:'方案1 · 数量优先', used:mc.sol, empty, newPieces:[]};
+    logLines.push(`方案1(数量优先)：最多放 ${mc.sol.length} 个方块，覆盖 ${mc.sol.length*4} 格，空 ${empty.length} 格。`);
+
+    const mcQ = maxCoverageQuality(boardCells, placementsByPiece);
+    const usedKeysQ = new Set();
+    mcQ.sol.forEach(u=>u.cells.forEach(([r,c])=>usedKeysQ.add(cellKey(r,c))));
+    const emptyQ = boardCells.filter(([r,c])=>!usedKeysQ.has(cellKey(r,c)));
+    plans.Q = {label:'方案2 · 品质优先', used:mcQ.sol, empty:emptyQ, newPieces:[]};
+    const colorCount={};
+    mcQ.sol.forEach(u=>{ colorCount[u.piece.color]=(colorCount[u.piece.color]||0)+1; });
+    logLines.push(`方案2(品质优先)：放 ${mcQ.sol.length} 个方块，空 ${emptyQ.length} 格（紫:${colorCount['#bd93f9']||0} 蓝:${colorCount['#3ca0e1']||0} 绿:${colorCount['#46d278']||0}）`);
+
+    if(Number.isInteger(T)){
+      let fixFound=null;
+      for(let k=1; k<=4 && !fixFound; k++){
+        const u = T-k;
+        if(u<0 || u>pieces.length) continue;
+        const attempt = useExactlyWithTileCheck(boardCells, placementsByPiece, u, k);
+        if(attempt){ fixFound={k, ...attempt}; }
+        logLines.push(`检查补 ${k} 块：${attempt?'✓ 可行':'× 不可行'}`);
+      }
+      if(fixFound){
+        plans.B = {label:`方案3 · 补${fixFound.k}块满铺`, used:fixFound.used, empty:[], newPieces:fixFound.newPieces};
+      }
+    }
+  }
+
+  logLines.push(`计算耗时 ${((Date.now()-t0)/1000).toFixed(2)} 秒`);
+  lastResult = plans;
+  renderResult(plans);
+  logEl.textContent = logLines.join('\n');
+}
+
+/* ---------- 结果渲染 ---------- */
+const NEW_PIECE_COLORS = ['#ffcf40','#ff9f40','#ff6f91','#9bffba'];
+
+function renderResult(plans){
+  const sec = document.getElementById('resultSection');
+  sec.classList.remove('hidden');
+  const tabsEl=document.getElementById('planTabs');
+  tabsEl.innerHTML='';
+  const keys=Object.keys(plans);
+  keys.forEach((k,i)=>{
+    const t=document.createElement('div');
+    t.className='tab'+(i===0?' active':'');
+    t.textContent=plans[k].label;
+    t.onclick=()=>{
+      [...tabsEl.children].forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      drawPlan(plans[k]);
+    };
+    tabsEl.appendChild(t);
+  });
+  drawPlan(plans[keys[0]]);
+  sec.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function drawPlan(plan){
+  currentActivePlan = plan;
+  const boardResult=document.getElementById('boardResult');
+  boardResult.innerHTML='';
+  const cellMap={};
+  plan.used.forEach(u=>{
+    u.cells.forEach(([r,c])=>{ cellMap[cellKey(r,c)]=u.piece; });
+  });
+  plan.newPieces.forEach((cells,idx)=>{
+    cells.forEach(([r,c])=>{ cellMap[cellKey(r,c)]={name:'新'+(idx+1), color:NEW_PIECE_COLORS[idx%NEW_PIECE_COLORS.length]}; });
+  });
+  const emptySet=new Set((plan.empty||[]).map(([r,c])=>cellKey(r,c)));
+
+  for(let r=0;r<N;r++) for(let c=0;c<N;c++){
+    const d=document.createElement('div');
+    const key=cellKey(r,c);
+    if(!boardActive[r][c]){ d.className='cell off'; }
+    else if(cellMap[key]){
+      d.className='cell filled';
+      d.style.background=cellMap[key].color;
+      d.textContent=cellMap[key].name;
+    } else if(emptySet.has(key)){
+      d.className='cell X'; d.textContent='×';
+    } else {
+      d.className='cell on';
+    }
+    boardResult.appendChild(d);
+  }
+
+  const usedCount=plan.used.length, newCount=plan.newPieces.length;
+  const emptyCount=(plan.empty||[]).length;
+  document.getElementById('stat').innerHTML=`
+    <div><b>${usedCount}</b>已用方块</div>
+    <div><b>${newCount}</b>需补方块</div>
+    <div><b>${emptyCount}</b>剩余空格</div>
+  `;
+
+  const legend=document.getElementById('legend');
+  let html='<h3 style="font-size:12px;color:var(--muted);margin:0 0 8px;font-weight:600;">已上阵方块</h3><div class="legend-grid">';
+  const seen=new Set();
+  plan.used.forEach(u=>{
+    if(seen.has(u.piece.id)) return; seen.add(u.piece.id);
+    html+=`<div class="row"><span class="swatchS" style="background:${u.piece.color}"></span><span>${u.piece.name}</span></div>`;
+  });
+  if(plan.used.length === 0) {
+    html+=`<div style="font-size:12px;color:var(--muted);">无</div>`;
+  }
+  html+='</div>';
+
+  if(plan.newPieces.length){
+    html+='<h3 style="font-size:12px;color:var(--muted);margin:12px 0 6px;font-weight:600;">推荐补块形状（需新获取）</h3>';
+    plan.newPieces.forEach((cells,idx)=>{
+      html+=`<div class="row"><span class="swatchS" style="background:${NEW_PIECE_COLORS[idx%NEW_PIECE_COLORS.length]}"></span><span>新${idx+1} — 坐标: ${cells.map(p=>'('+p[0]+','+p[1]+')').join(' ')}</span></div>`;
+    });
+  }
+  const usedIds=new Set(plan.used.map(u=>u.piece.id));
+  const unused=pieces.filter(p=>!usedIds.has(p.id));
+  if(unused.length){
+    html+=`<div class="note">闲置未用：${unused.map(p=>p.name).join('、')}</div>`;
+  }
+  legend.innerHTML=html;
+}
+
+/* ---------- 一键保存结果为高清图片 ---------- */
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+document.getElementById('saveImgBtn').onclick = () => {
+  if (!currentActivePlan) {
+    showToast('暂无可保存的求解结果');
+    return;
+  }
+
+  try {
+    const plan = currentActivePlan;
+    const scale = 2; // 2x Retina 高清导出
+    const W = 480;
+
+    // 预计算底部图例高度
+    const usedPieces = plan.used.map(u => u.piece);
+    const usedRows = Math.max(1, Math.ceil(usedPieces.length / 5));
+    const newPieceRows = plan.newPieces.length;
+    const usedIds = new Set(plan.used.map(u => u.piece.id));
+    const unused = pieces.filter(p => !usedIds.has(p.id));
+
+    let extraH = 38 + usedRows * 28;
+    if (newPieceRows > 0) extraH += 34 + newPieceRows * 26;
+    if (unused.length > 0) extraH += 44;
+
+    const H = 610 + extraH;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W * scale;
+    canvas.height = H * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    // 1. 整体浅灰背景
+    ctx.fillStyle = '#F5F5F7';
+    ctx.fillRect(0, 0, W, H);
+
+    // 2. 白色主卡片阴影与主体
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.06)';
+    ctx.shadowBlur = 24;
+    ctx.shadowOffsetY = 6;
+    ctx.fillStyle = '#FFFFFF';
+    roundRect(ctx, 20, 20, W - 40, H - 40, 22);
+    ctx.fill();
+    ctx.restore();
+
+    // 卡片细边框
+    ctx.strokeStyle = '#E5E5EA';
+    ctx.lineWidth = 1;
+    roundRect(ctx, 20, 20, W - 40, H - 40, 22);
+    ctx.stroke();
+
+    // 3. 顶部标题与方案胶囊标签
+    ctx.fillStyle = '#1D1D1F';
+    ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('星象嵌合求解方案', 44, 56);
+
+    ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+    const badgeText = plan.label;
+    const badgeW = ctx.measureText(badgeText).width + 22;
+    ctx.fillStyle = '#1D1D1F';
+    roundRect(ctx, W - 44 - badgeW, 42, badgeW, 28, 14);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textAlign = 'center';
+    ctx.fillText(badgeText, W - 44 - badgeW / 2, 56);
+
+    // 4. 统计数据栏
+    const statY = 86;
+    ctx.fillStyle = '#FAFAFC';
+    roundRect(ctx, 44, statY, W - 88, 66, 14);
+    ctx.fill();
+    ctx.strokeStyle = '#E5E5EA';
+    ctx.stroke();
+
+    const stats = [
+      { num: plan.used.length, label: '已用方块' },
+      { num: plan.newPieces.length, label: '需补方块' },
+      { num: (plan.empty || []).length, label: '剩余空格' }
+    ];
+    stats.forEach((st, idx) => {
+      const cx = 44 + ((W - 88) / 3) * (idx + 0.5);
+      ctx.fillStyle = '#1D1D1F';
+      ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(st.num), cx, statY + 26);
+
+      ctx.fillStyle = '#86868B';
+      ctx.font = '500 11px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+      ctx.fillText(st.label, cx, statY + 48);
+    });
+
+    // 5. 8×8 棋盘绘制
+    const boardY = 168;
+    const boardSize = W - 88; // 392px
+    ctx.fillStyle = '#FAFAFC';
+    roundRect(ctx, 44, boardY, boardSize, boardSize, 16);
+    ctx.fill();
+    ctx.strokeStyle = '#E5E5EA';
+    ctx.stroke();
+
+    const pad = 10;
+    const gap = 5;
+    const cellSize = (boardSize - pad * 2 - gap * 7) / 8;
+
+    const cellMap = {};
+    plan.used.forEach(u => {
+      u.cells.forEach(([r, c]) => { cellMap[cellKey(r, c)] = u.piece; });
+    });
+    plan.newPieces.forEach((cells, idx) => {
+      cells.forEach(([r, c]) => {
+        cellMap[cellKey(r, c)] = { name: '新' + (idx + 1), color: NEW_PIECE_COLORS[idx % NEW_PIECE_COLORS.length] };
+      });
+    });
+    const emptySet = new Set((plan.empty || []).map(([r, c]) => cellKey(r, c)));
+
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        const x = 44 + pad + c * (cellSize + gap);
+        const y = boardY + pad + r * (cellSize + gap);
+        const key = cellKey(r, c);
+
+        if (!boardActive[r][c]) {
+          ctx.save();
+          ctx.strokeStyle = '#E2E2E8';
+          ctx.setLineDash([3, 3]);
+          roundRect(ctx, x, y, cellSize, cellSize, 7);
+          ctx.stroke();
+          ctx.restore();
+        } else if (cellMap[key]) {
+          ctx.fillStyle = cellMap[key].color;
+          roundRect(ctx, x, y, cellSize, cellSize, 7);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+          ctx.stroke();
+
+          ctx.fillStyle = '#1D1D1F';
+          ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(cellMap[key].name, x + cellSize / 2, y + cellSize / 2);
+        } else if (emptySet.has(key)) {
+          ctx.fillStyle = '#FFF0EF';
+          roundRect(ctx, x, y, cellSize, cellSize, 7);
+          ctx.fill();
+          ctx.strokeStyle = '#FFC7C4';
+          ctx.stroke();
+
+          ctx.fillStyle = '#FF3B30';
+          ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('×', x + cellSize / 2, y + cellSize / 2);
+        } else {
+          ctx.fillStyle = '#F2F2F7';
+          roundRect(ctx, x, y, cellSize, cellSize, 7);
+          ctx.fill();
+          ctx.strokeStyle = '#D1D1D6';
+          ctx.stroke();
+        }
+      }
+    }
+
+    // 6. 底部方块清单与补块说明
+    let curY = boardY + boardSize + 24;
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#86868B';
+    ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+    ctx.fillText('已上阵方块', 44, curY);
+    curY += 18;
+
+    if (usedPieces.length === 0) {
+      ctx.fillStyle = '#86868B';
+      ctx.font = '400 12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+      ctx.fillText('无', 44, curY + 6);
+      curY += 28;
+    } else {
+      usedPieces.forEach((p, idx) => {
+        const col = idx % 5;
+        const row = Math.floor(idx / 5);
+        const px = 44 + col * 78;
+        const py = curY + row * 28;
+
+        ctx.fillStyle = p.color;
+        roundRect(ctx, px, py, 14, 14, 4);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+        ctx.stroke();
+
+        ctx.fillStyle = '#1D1D1F';
+        ctx.font = '500 12px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.name, px + 20, py + 7);
+      });
+      curY += usedRows * 28;
+    }
+
+    if (plan.newPieces.length > 0) {
+      curY += 10;
+      ctx.fillStyle = '#86868B';
+      ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+      ctx.fillText('推荐补块形状（需新获取）', 44, curY);
+      curY += 18;
+
+      plan.newPieces.forEach((cells, idx) => {
+        const py = curY + idx * 26;
+        ctx.fillStyle = NEW_PIECE_COLORS[idx % NEW_PIECE_COLORS.length];
+        roundRect(ctx, 44, py, 14, 14, 4);
+        ctx.fill();
+
+        ctx.fillStyle = '#1D1D1F';
+        ctx.font = '500 12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+        const coordText = `新${idx + 1} — 坐标: ${cells.map(p => '(' + p[0] + ',' + p[1] + ')').join(' ')}`;
+        ctx.fillText(coordText, 64, py + 7);
+      });
+      curY += plan.newPieces.length * 26;
+    }
+
+    if (unused.length > 0) {
+      curY += 14;
+      ctx.fillStyle = '#86868B';
+      ctx.font = '400 12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+      const unusedStr = '闲置未用：' + unused.map(p => p.name).join('、');
+      ctx.fillText(unusedStr.length > 34 ? unusedStr.slice(0, 34) + '...' : unusedStr, 44, curY);
+    }
+
+    // 底部时间水印
+    ctx.fillStyle = '#C7C7CC';
+    ctx.font = '400 11px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+    ctx.textAlign = 'center';
+    const nowStr = new Date().toLocaleString('zh-CN', { hour12: false });
+    ctx.fillText(`由 星象嵌合求解器 生成 · ${nowStr}`, W / 2, H - 34);
+
+    // 触发浏览器下载
+    const dataUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = `星象嵌合方案_${plan.label.replace(/\s+/g, '')}.png`;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showToast('已生成高清结果图并开始下载');
+  } catch (err) {
+    console.error(err);
+    showToast('生成图片失败，请重试');
+  }
+};
+</script>
+</body>
+</html>
