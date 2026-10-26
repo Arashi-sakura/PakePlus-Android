@@ -5,519 +5,118 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>星象嵌合求解器</title>
 <style>
-:root {
-  --bg: #F5F5F7;
-  --card: #FFFFFF;
-  --line: #E5E5EA;
-  --cellEmpty: #F2F2F7;
-  --cellBorder: #D1D1D6;
-  --red: #FF3B30;
-  --text: #1D1D1F;
-  --muted: #86868B;
-  --accent: #000000;
-  --btnBg: #F2F2F7;
-  --btnBorder: #E5E5EA;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+:root{
+  --bg:#0d0d14; --card:#15151f; --line:#2a2a3a;
+  --cellEmpty:#1a2a4e; --cellBorder:#3a5a9a;
+  --red:#e63c3c; --text:#e8e8f0; --muted:#9098ae;
+  --accent:#3ca0e1;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
 }
+*{box-sizing:border-box;}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;}
+.wrap{max-width:480px;margin:0 auto;padding:14px 14px 40px;}
+h1{font-size:19px;text-align:center;margin:6px 0 2px;
+  background:linear-gradient(90deg,#ff7a7a,#ffd27a,#7affb0,#7ad2ff,#b07aff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;}
+.sub{text-align:center;color:var(--muted);font-size:12px;margin-bottom:14px;}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:12px;margin-bottom:12px;}
+section h2{font-size:14px;margin:0 0 8px;color:var(--accent);}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+button{background:#1f2a40;color:var(--text);border:1px solid #33496e;
+  border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;}
+button:active{background:#2a3a5a;}
+button.primary{background:var(--accent);color:#07131f;font-weight:bold;border:none;}
+button.danger{background:#3a1a1a;border-color:#5a2a2a;}
+button.small{padding:5px 9px;font-size:12px;}
 
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
+.board8{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;}
+.cell{aspect-ratio:1;border-radius:5px;display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:bold;color:#1a1a1a;cursor:pointer;user-select:none;}
+.cell.off{background:transparent;border:1px dashed #333;}
+.cell.on{background:var(--cellEmpty);border:1px solid var(--cellBorder);}
+.cell.X{background:var(--red);color:#fff;cursor:default;}
+.cell.filled{cursor:default;}
 
-html, body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
+.mini4{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;width:96px;margin:6px 0;}
+.mini4 .c{aspect-ratio:1;border-radius:4px;cursor:pointer;background:#1a2a4e;border:1px solid #3a5a9a;}
+.mini4 .c.on{background:var(--pickColor,#bd93f9);border-color:#fff;}
 
-.wrap {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 20px 16px 48px;
-}
+.colorPicker{display:flex;gap:6px;margin:6px 0;}
+.swatch{width:26px;height:26px;border-radius:6px;cursor:pointer;border:2px solid transparent;}
+.swatch.sel{border-color:#fff;}
 
-header {
-  text-align: center;
-  margin-bottom: 20px;
-}
+.pieceList{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.pieceCard{background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:6px;
+  width:72px;text-align:center;font-size:10px;}
+.pieceCard .mini{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;width:48px;margin:0 auto 4px;}
+.pieceCard .mini div{aspect-ratio:1;border-radius:2px;}
+.pieceCard .mini div.off{background:transparent;}
 
-h1 {
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  margin: 4px 0 6px;
-  color: var(--text);
-}
+.stat{display:flex;justify-content:space-around;text-align:center;margin:8px 0;}
+.stat div{font-size:11px;color:var(--muted);}
+.stat b{display:block;font-size:18px;color:var(--text);}
 
-.sub {
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 400;
-}
+.tabs{display:flex;gap:6px;margin-bottom:8px;}
+.tab{flex:1;text-align:center;padding:7px 4px;border-radius:8px;background:#1a1a26;
+  border:1px solid var(--line);font-size:12.5px;cursor:pointer;}
+.tab.active{border-color:var(--accent);background:#1a2740;font-weight:bold;}
 
-section {
-  background: var(--card);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
-  border-radius: 18px;
-  padding: 18px;
-  margin-bottom: 16px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-}
-
-section h2 {
-  font-size: 15px;
-  font-weight: 600;
-  margin: 0 0 12px;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.section-header h2 {
-  margin: 0;
-}
-
-.step-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  background: var(--text);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-button {
-  background: var(--btnBg);
-  color: var(--text);
-  border: 1px solid transparent;
-  border-radius: 10px;
-  padding: 9px 14px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.16s cubic-bezier(0.25, 0.1, 0.25, 1);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-}
-
-button:hover {
-  background: #E8E8ED;
-}
-
-button:active {
-  transform: scale(0.97);
-  background: #DCDCE2;
-}
-
-button.primary {
-  background: var(--accent);
-  color: #FFFFFF;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-}
-
-button.primary:hover {
-  background: #2C2C2E;
-}
-
-button.primary:active {
-  background: #3A3A3C;
-}
-
-button.outline {
-  background: #FFFFFF;
-  color: var(--text);
-  border: 1px solid #D1D1D6;
-}
-
-button.outline:hover {
-  background: #F5F5F7;
-}
-
-button.danger {
-  background: #FFF2F2;
-  color: var(--red);
-  border: 1px solid #FFD8D6;
-}
-
-button.danger:hover {
-  background: #FFE5E5;
-}
-
-button.small {
-  padding: 6px 11px;
-  font-size: 12px;
-  border-radius: 8px;
-}
-
-.board8 {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 5px;
-  padding: 6px;
-  background: #FAFAFC;
-  border-radius: 14px;
-  border: 1px solid var(--line);
-}
-
-.cell {
-  aspect-ratio: 1;
-  border-radius: 7px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 700;
-  color: #1D1D1F;
-  cursor: pointer;
-  user-select: none;
-  transition: transform 0.1s ease, background-color 0.15s ease;
-}
-
-.cell:active {
-  transform: scale(0.92);
-}
-
-.cell.off {
-  background: transparent;
-  border: 1px dashed #E0E0E6;
-}
-
-.cell.on {
-  background: var(--cellEmpty);
-  border: 1px solid var(--cellBorder);
-}
-
-.cell.X {
-  background: #FFF0EF;
-  color: var(--red);
-  border: 1px solid #FFC7C4;
-  font-size: 13px;
-  cursor: default;
-}
-
-.cell.filled {
-  cursor: default;
-  color: #111;
-  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.05);
-  border: 1px solid rgba(0,0,0,0.08);
-}
-
-.editor-area {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  margin: 10px 0 14px;
-  flex-wrap: wrap;
-}
-
-.mini4 {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-  width: 112px;
-  padding: 6px;
-  background: #FAFAFC;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-}
-
-.mini4 .c {
-  aspect-ratio: 1;
-  border-radius: 5px;
-  cursor: pointer;
-  background: var(--cellEmpty);
-  border: 1px solid var(--cellBorder);
-  transition: all 0.12s ease;
-}
-
-.mini4 .c.on {
-  background: var(--pickColor, #bd93f9);
-  border-color: rgba(0,0,0,0.2);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.colorPicker {
-  display: flex;
-  gap: 8px;
-  margin: 4px 0 8px;
-}
-
-.swatch {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid #FFFFFF;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.swatch.sel {
-  transform: scale(1.12);
-  box-shadow: 0 0 0 2px var(--text);
-}
-
-.pieceList {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.pieceCard {
-  background: #FAFAFC;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 8px;
-  width: 78px;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text);
-  transition: box-shadow 0.15s ease;
-}
-
-.pieceCard .mini {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 2px;
-  width: 48px;
-  margin: 0 auto 6px;
-}
-
-.pieceCard .mini div {
-  aspect-ratio: 1;
-  border-radius: 2.5px;
-}
-
-.pieceCard .mini div.off {
-  background: #EFEFF4;
-}
-
-/* Segmented Control for Plan Tabs */
-.tabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 14px;
-  background: #EFEFF4;
-  padding: 4px;
-  border-radius: 12px;
-}
-
-.tab {
-  flex: 1;
-  text-align: center;
-  padding: 8px 6px;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--muted);
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.tab.active {
-  background: #FFFFFF;
-  color: var(--text);
-  font-weight: 600;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-.stat {
-  display: flex;
-  justify-content: space-around;
-  text-align: center;
-  margin: 12px 0 14px;
-  background: #FAFAFC;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 12px 8px;
-}
-
-.stat div {
-  font-size: 11px;
-  color: var(--muted);
-  font-weight: 500;
-}
-
-.stat b {
-  display: block;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 2px;
-}
-
-.legend {
-  background: #FAFAFC;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 12px;
-}
-
-.legend .row {
-  margin: 4px 0;
-  font-size: 12px;
-}
-
-.legend-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 14px;
-}
-
-.swatchS {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-  flex-shrink: 0;
-  border: 1px solid rgba(0,0,0,0.1);
-}
-
-.note {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px dashed var(--line);
-  line-height: 1.6;
-}
-
-#log {
-  font-size: 12px;
-  color: var(--muted);
-  white-space: pre-wrap;
-  line-height: 1.6;
-  margin-top: 10px;
-  padding: 0 4px;
-}
-
-.hidden {
-  display: none;
-}
-
-/* Dynamic Island Toast */
-#toast {
-  position: fixed;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-20px);
-  background: rgba(29, 29, 31, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: #FFFFFF;
-  padding: 10px 20px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 500;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 9999;
-}
-
-#toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
+.legend .row{margin:2px 0;font-size:12px;}
+.swatchS{width:13px;height:13px;border-radius:3px;flex-shrink:0;}
+.note{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6;}
+#log{font-size:12px;color:var(--muted);white-space:pre-wrap;line-height:1.6;}
+.hidden{display:none;}
 </style>
 </head>
 <body>
-<div id="toast">提示信息</div>
-
 <div class="wrap">
-  <header>
-    <h1>星象嵌合求解器</h1>
-    <div class="sub">棋盘与方块自由编辑 · 智能排布求解 · 一键导出长图</div>
-  </header>
+  <h1>✨ 星象嵌合求解器</h1>
+  <div class="sub">棋盘 + 方块库都可编辑 · 一键求解 · 自动给补块建议</div>
 
   <section>
-    <h2><span class="step-badge">1</span> 棋盘配置（点击格子切换启用/禁用）</h2>
+    <h2>① 棋盘（点格子切换 启用/禁用）</h2>
     <div class="board8" id="boardEdit"></div>
-    <div class="row" style="margin-top:12px;">
-      <button class="small" id="resetDiamond">恢复默认菱形 (40格)</button>
-      <button class="small" id="clearBoard">清空棋盘</button>
+    <div class="row" style="margin-top:8px;">
+      <button class="small" id="resetDiamond">恢复默认菱形(40格)</button>
+      <button class="small" id="clearBoard">清空</button>
       <button class="small" id="fillBoard">全部启用</button>
     </div>
   </section>
 
   <section>
-    <h2><span class="step-badge">2</span> 方块库（点 4×4 格画形状，固定朝向）</h2>
-    <div class="colorPicker" id="colorPicker"></div>
-    <div class="editor-area">
-      <div class="mini4" id="pieceEdit"></div>
-      <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:140px;">
-        <button class="primary" id="addPiece">+ 添加到方块库</button>
-        <div class="row">
-          <button class="small" id="clearMini" style="flex:1;">清空画板</button>
-          <button class="small danger" id="clearAllPieces" style="flex:1;">清空方块库</button>
-        </div>
-      </div>
+    <h2>② 方块库（点4×4格子画形状，不能旋转/翻转放置）</h2>
+    <div class="row">
+      <div class="colorPicker" id="colorPicker"></div>
+    </div>
+    <div class="mini4" id="pieceEdit"></div>
+    <div class="row">
+      <button class="small primary" id="addPiece">+ 添加到方块库</button>
+      <button class="small" id="clearMini">清空画板</button>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <button class="small danger" id="clearAllPieces">🗑️ 清空整个方块库</button>
     </div>
     <div class="pieceList" id="pieceList"></div>
   </section>
 
   <section>
-    <button class="primary" id="solveBtn" style="width:100%;padding:13px;font-size:15px;border-radius:12px;">
-      开始求解方案
-    </button>
+    <button class="primary" id="solveBtn" style="width:100%;padding:12px;font-size:15px;">🧩 开始求解</button>
     <div id="log"></div>
   </section>
 
   <section id="resultSection" class="hidden">
-    <div class="section-header">
-      <h2><span class="step-badge">3</span> 求解结果</h2>
-      <button class="small outline" id="saveImgBtn">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        保存结果为图片
-      </button>
-    </div>
+    <h2>③ 结果</h2>
     <div class="tabs" id="planTabs"></div>
     <div class="stat" id="stat"></div>
     <div class="board8" id="boardResult"></div>
-    <div class="legend" id="legend" style="margin-top:12px;"></div>
+    <div class="legend" id="legend" style="margin-top:10px;"></div>
   </section>
 </div>
 
 <script>
-/* ---------- 轻提示弹窗 ---------- */
-let toastTimer = null;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
-}
-
 /* ---------- 棋盘编辑 ---------- */
 const N = 8;
 let boardActive = []; // [r][c] bool
@@ -544,7 +143,7 @@ function renderBoardEdit(){
   }
 }
 renderBoardEdit();
-document.getElementById('resetDiamond').onclick=()=>{ boardActive=diamondPreset(); renderBoardEdit(); showToast('已恢复默认40格菱形'); };
+document.getElementById('resetDiamond').onclick=()=>{ boardActive=diamondPreset(); renderBoardEdit(); };
 document.getElementById('clearBoard').onclick=()=>{ boardActive=Array.from({length:N},()=>Array(N).fill(false)); renderBoardEdit(); };
 document.getElementById('fillBoard').onclick=()=>{ boardActive=Array.from({length:N},()=>Array(N).fill(true)); renderBoardEdit(); };
 
@@ -591,16 +190,12 @@ function normalizeCells(cellsArr){
 document.getElementById('addPiece').onclick=()=>{
   const cells=[];
   for(let r=0;r<4;r++) for(let c=0;c<4;c++) if(miniGrid[r][c]) cells.push([r,c]);
-  if(cells.length!==4){
-    showToast('请画出一个正好 4 格的形状（四连方块）');
-    return;
-  }
+  if(cells.length!==4){ alert('请画出一个正好4格的形状（四连方块）'); return; }
   pieceCounter++;
   pieces.push({id:pieceCounter, name:'#'+pieceCounter, cells:normalizeCells(cells), color:pickColor});
   miniGrid=Array.from({length:4},()=>Array(4).fill(false));
   renderMini();
   renderPieceList();
-  showToast(`已添加方块 #${pieceCounter}`);
 };
 function renderPieceList(){
   const el=document.getElementById('pieceList');
@@ -610,6 +205,8 @@ function renderPieceList(){
     card.className='pieceCard';
     const mini=document.createElement('div');
     mini.className='mini';
+    const minr=Math.min(...p.cells.map(x=>x[0])), maxr=Math.max(...p.cells.map(x=>x[0]));
+    const minc=Math.min(...p.cells.map(x=>x[1])), maxc=Math.max(...p.cells.map(x=>x[1]));
     for(let r=0;r<4;r++) for(let c=0;c<4;c++){
       const on = p.cells.some(x=>x[0]===r&&x[1]===c);
       const dd=document.createElement('div');
@@ -624,9 +221,8 @@ function renderPieceList(){
     const del=document.createElement('button');
     del.className='small danger';
     del.textContent='删除';
-    del.style.marginTop='5px';
+    del.style.marginTop='4px';
     del.style.width='100%';
-    del.style.padding='4px 0';
     del.onclick=()=>{ pieces=pieces.filter(x=>x.id!==p.id); renderPieceList(); };
     card.appendChild(del);
     el.appendChild(card);
@@ -636,22 +232,18 @@ let clearAllArmed = false;
 let clearAllTimer = null;
 const clearAllBtn = document.getElementById('clearAllPieces');
 clearAllBtn.onclick=()=>{
-  if(pieces.length===0) {
-    showToast('方块库已经是空的');
-    return;
-  }
+  if(pieces.length===0) return;
   if(!clearAllArmed){
     clearAllArmed = true;
-    clearAllBtn.textContent = '再点确认清空';
-    clearAllTimer = setTimeout(()=>{ clearAllArmed=false; clearAllBtn.textContent='清空方块库'; }, 3000);
+    clearAllBtn.textContent = '❗再点一次确认清空';
+    clearAllTimer = setTimeout(()=>{ clearAllArmed=false; clearAllBtn.textContent='🗑️ 清空整个方块库'; }, 3000);
     return;
   }
   clearTimeout(clearAllTimer);
   clearAllArmed = false;
-  clearAllBtn.textContent = '清空方块库';
+  clearAllBtn.textContent = '🗑️ 清空整个方块库';
   pieces=[];
   renderPieceList();
-  showToast('已清空方块库');
 };
 
 /* ---------- 求解算法 ---------- */
@@ -679,9 +271,11 @@ function getPlacements(piece, boardSet){
 let nodeCount = 0;
 function timeUp(){
   nodeCount++;
-  return false;
+  return false; // 超时保护已移除，算法跑到自然结束为止
 }
 
+// 把“形状+颜色”完全相同的方块合并成一组，组内带数量(count)，大幅减少重复形状造成的搜索爆炸
+// 颜色也作为分组键，这样品质优先模式才能按颜色正确计分
 function buildGroups(placementsByPiece){
   const map = new Map();
   pieces.forEach(p=>{
@@ -694,14 +288,50 @@ function buildGroups(placementsByPiece){
 }
 function pieceById(id){ return pieces.find(p=>p.id===id); }
 
+// 品质权重：紫色 > 蓝色 > 绿色 > 其他。差距拉得足够大，保证严格按优先级排序，而不是简单加和
 function qualityWeight(group){
   const c = (group.color||'').toLowerCase();
   if(c==='#bd93f9') return 1000000; // 紫
   if(c==='#3ca0e1') return 1000;    // 蓝
   if(c==='#46d278') return 1;       // 绿
-  return 1;
+  return 1; // 其他颜色按最低优先级
 }
 function equalWeight(){ return 1; }
+
+
+// 快速预检：剩余空格的每个连通块格数都必须是4的倍数，才有可能被四格块铺满
+function componentsDivisibleBy4(cellSet){
+  const seen=new Set();
+  for(const start of cellSet){
+    if(seen.has(start)) continue;
+    let size=0; const stack=[start]; seen.add(start);
+    while(stack.length){
+      const cur=stack.pop(); size++;
+      const [r,c]=cur.split(',').map(Number);
+      for(const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const nb=(r+dr)+','+(c+dc);
+        if(cellSet.has(nb) && !seen.has(nb)){ seen.add(nb); stack.push(nb); }
+      }
+    }
+    if(size%4!==0) return false;
+  }
+  return true;
+}
+
+function isTetromino(cellsSet){
+  if(cellsSet.size!==4) return false;
+  const arr=[...cellsSet].map(k=>k.split(',').map(Number));
+  const seen=new Set([arr[0].join(',')]);
+  const stack=[arr[0]];
+  while(stack.length){
+    const [r,c]=stack.pop();
+    for(const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nb=(r+dr)+','+(c+dc);
+      if(cellsSet.has(nb) && !seen.has(nb)){ seen.add(nb); stack.push(nb.split(',').map(Number)); }
+    }
+  }
+  return seen.size===4;
+}
 
 function canTile(emptySet, k){
   if(timeUp()) return null;
@@ -738,6 +368,7 @@ function canTile(emptySet, k){
   return null;
 }
 
+// exact cover: cover ALL board cells using pieces (each at most once). 目标格驱动,已经很快,保留原逻辑但加超时保护
 function exactCover(boardCells, placementsByPiece){
   nodeCount=0;
   function solve(empty, used, placed){
@@ -767,7 +398,9 @@ function exactCover(boardCells, placementsByPiece){
   return r===true ? placed : (r==='TIMEOUT' ? 'TIMEOUT' : null);
 }
 
+// 把一个分组方案(每组用了几个、放在哪)展开成具体的piece实例列表，用于展示
 function expandGroupUsage(groupUsage){
+  // groupUsage: [{group, cellsList:[cells,...]}]
   const result=[];
   groupUsage.forEach(({group, cellsList})=>{
     cellsList.forEach((cells, idx)=>{
@@ -777,19 +410,37 @@ function expandGroupUsage(groupUsage){
   return result;
 }
 
+// 核心：按“形状分组”做回溯。每组最多用 group.count 个，组内用 startIdx 保证同一子集不被重复枚举。
+// mode: 'max' 最大化用掉的方块数；'exactU' 恰好用 u 个且剩余格子能被 k 个自由四格块铺满
 function groupSearch(groups, boardCells, mode, opts){
   const boardKeySet = new Set(boardCells.map(([r,c])=>cellKey(r,c)));
   const weightFn = opts.weightFn || equalWeight;
+  const maxCount = opts.maxCount || Infinity; // 理论最多能放几块（精确覆盖不成立时 = T-1）
+  // 在最多放 maxCount 块的前提下，能拿到的理论最高得分（取权重最高的那几块）
+  let capScore = Infinity;
+  if(opts.maxCount){
+    const ws=[]; groups.forEach(g=>{ for(let i=0;i<g.count;i++) ws.push(weightFn(g)); });
+    ws.sort((a,b)=>b-a);
+    capScore = ws.slice(0,maxCount).reduce((a,b)=>a+b,0);
+  }
   let best = {score:-1, count:0, usage:null};
   let found = null;
 
   function tryFromGroup(gi, startIdx, remaining, occ, usage, usedCount, score){
     if(timeUp()) return 'TIMEOUT';
     if(mode==='max'){
-      let upper = score + (gi<groups.length ? remaining*weightFn(groups[gi]) : 0);
-      for(let j=gi+1;j<groups.length;j++) upper += groups[j].count*weightFn(groups[j]);
+      // 上界剪枝：当前得分 + 剩余所有组全部用满能增加的最大得分，若已不可能超过best则剪掉
+      // 还能再放的块数受 maxCount 限制，只能取剩余方块里权重最高的那几块
+      const ws=[];
+      if(gi<groups.length){ const w0=weightFn(groups[gi]); for(let i=0;i<remaining;i++) ws.push(w0); }
+      for(let j=gi+1;j<groups.length;j++){ const wj=weightFn(groups[j]); for(let i=0;i<groups[j].count;i++) ws.push(wj); }
+      ws.sort((a,b)=>b-a);
+      const room = Math.min(ws.length, maxCount-usedCount);
+      let upper = score;
+      for(let i=0;i<room;i++) upper += ws[i];
       if(upper<=best.score) return;
     } else {
+      // exactU剪枝：就算剩余的组全部用满，也凑不到目标数量u，这条分支没救了，直接剪掉
       let upperCount = usedCount + remaining;
       for(let j=gi+1;j<groups.length;j++) upperCount += groups[j].count;
       if(upperCount<opts.u) return;
@@ -797,10 +448,12 @@ function groupSearch(groups, boardCells, mode, opts){
     if(gi===groups.length){
       if(mode==='max'){
         if(score>best.score){ best.score=score; best.count=usedCount; best.usage=usage.map(u=>({group:u.group, cellsList:u.cellsList.slice()})); }
+        if(best.score>=capScore) return 'STOP';
         return;
-      } else {
+      } else { // exactU
         if(usedCount===opts.u){
           const leftover = new Set([...boardKeySet].filter(x=>!occ.has(x)));
+          if(!componentsDivisibleBy4(leftover)) return; // 快速预检：任一连通块格数不是4的倍数，必然铺不满
           const tiling = canTile(leftover, opts.k);
           if(tiling){ found = {usage: usage.map(u=>({group:u.group, cellsList:u.cellsList.slice()})), newPieces: tiling}; return 'STOP'; }
         }
@@ -809,27 +462,31 @@ function groupSearch(groups, boardCells, mode, opts){
     }
     const g = groups[gi];
     const nextRemaining = groups[gi+1] ? groups[gi+1].count : 0;
-    let r = tryFromGroup(gi+1, 0, nextRemaining, occ, usage, usedCount, score);
-    if(r==='TIMEOUT'||r==='STOP') return r;
-    if(remaining>0){
-      const w = weightFn(g);
-      for(let idx=startIdx; idx<g.placements.length; idx++){
-        const cells = g.placements[idx];
-        const keys = cells.map(([r2,c2])=>cellKey(r2,c2));
-        let ok=true;
-        for(const kk of keys) if(occ.has(kk)){ ok=false; break; }
-        if(!ok) continue;
-        const newOcc = new Set(occ); keys.forEach(kk=>newOcc.add(kk));
-        let entry = usage.find(u=>u.group===g);
-        if(!entry){ entry={group:g, cellsList:[]}; usage.push(entry); }
-        entry.cellsList.push(cells);
-        if(mode==='exactU' && usedCount+1>opts.u){ entry.cellsList.pop(); if(entry.cellsList.length===0) usage.pop(); continue; }
-        const rr = tryFromGroup(gi, idx+1, remaining-1, newOcc, usage, usedCount+1, score+w);
-        entry.cellsList.pop();
-        if(entry.cellsList.length===0) usage.pop();
-        if(rr==='TIMEOUT'||rr==='STOP') return rr;
+    const doSkip = ()=> tryFromGroup(gi+1, 0, nextRemaining, occ, usage, usedCount, score);
+    const doTake = ()=>{
+      if(remaining>0 && !(mode==='max' && usedCount>=maxCount)){
+        const w = weightFn(g);
+        for(let idx=startIdx; idx<g.placements.length; idx++){
+          const cells = g.placements[idx];
+          const keys = cells.map(([r2,c2])=>cellKey(r2,c2));
+          let ok=true;
+          for(const kk of keys) if(occ.has(kk)){ ok=false; break; }
+          if(!ok) continue;
+          const newOcc = new Set(occ); keys.forEach(kk=>newOcc.add(kk));
+          let entry = usage.find(u=>u.group===g);
+          if(!entry){ entry={group:g, cellsList:[]}; usage.push(entry); }
+          entry.cellsList.push(cells);
+          if(mode==='exactU' && usedCount+1>opts.u){ entry.cellsList.pop(); if(entry.cellsList.length===0) usage.pop(); continue; }
+          const rr = tryFromGroup(gi, idx+1, remaining-1, newOcc, usage, usedCount+1, score+w);
+          entry.cellsList.pop();
+          if(entry.cellsList.length===0) usage.pop();
+          if(rr==='TIMEOUT'||rr==='STOP') return rr;
+        }
       }
-    }
+    };
+    // 先尝试“这一组不再用”，再尝试“多放一块”（实测这个顺序对补块搜索更快）
+    let r2 = doSkip(); if(r2==='TIMEOUT'||r2==='STOP') return r2;
+    let r1 = doTake(); if(r1==='TIMEOUT'||r1==='STOP') return r1;
     return;
   }
 
@@ -843,28 +500,30 @@ function groupSearch(groups, boardCells, mode, opts){
   }
 }
 
-function maxCoverage(boardCells, placementsByPiece){
+function maxCoverage(boardCells, placementsByPiece, maxCount){
   const groups = buildGroups(placementsByPiece);
-  return groupSearch(groups, boardCells, 'max', {weightFn: equalWeight});
+  const r = groupSearch(groups, boardCells, 'max', {weightFn: equalWeight, maxCount});
+  return r;
 }
 
-function maxCoverageQuality(boardCells, placementsByPiece){
+function maxCoverageQuality(boardCells, placementsByPiece, maxCount){
   const groups = buildGroups(placementsByPiece);
-  return groupSearch(groups, boardCells, 'max', {weightFn: qualityWeight});
+  const r = groupSearch(groups, boardCells, 'max', {weightFn: qualityWeight, maxCount});
+  return r;
 }
 
 function useExactlyWithTileCheck(boardCells, placementsByPiece, u, k){
   const groups = buildGroups(placementsByPiece);
-  return groupSearch(groups, boardCells, 'exactU', {u,k});
+  const r = groupSearch(groups, boardCells, 'exactU', {u,k});
+  return r;
 }
 
 /* ---------- 主求解流程 ---------- */
 let lastResult = null;
-let currentActivePlan = null;
 
 document.getElementById('solveBtn').onclick = ()=>{
   const logEl=document.getElementById('log');
-  logEl.textContent='正在计算最优嵌合方案...';
+  logEl.textContent='求解中...';
   setTimeout(runSolve, 30);
 };
 
@@ -872,15 +531,15 @@ function runSolve(){
   const logEl=document.getElementById('log');
   const boardCells = getBoardCells();
   const boardN = boardCells.length;
-  if(boardN===0){ logEl.textContent='棋盘是空的，请先在步骤 1 点击格子启用棋盘。'; showToast('请先启用棋盘格子'); return; }
-  if(pieces.length===0){ logEl.textContent='还没有任何方块，请先在步骤 2 添加方块。'; showToast('请先添加至少一个方块'); return; }
+  if(boardN===0){ logEl.textContent='棋盘是空的，先点格子启用棋盘。'; return; }
+  if(pieces.length===0){ logEl.textContent='还没有任何方块，先在②画几个形状。'; return; }
 
   const boardSet = new Set(boardCells.map(([r,c])=>cellKey(r,c)));
   const placementsByPiece={};
   pieces.forEach(p=>{ placementsByPiece[p.id]=getPlacements(p, boardSet); });
 
   let logLines=[];
-  logLines.push(`棋盘格数: ${boardN} ｜ 方块总数: ${pieces.length}`);
+  logLines.push(`棋盘格数: ${boardN} ｜ 方块数: ${pieces.length}`);
   const t0 = Date.now();
 
   const T = boardN/4;
@@ -890,28 +549,31 @@ function runSolve(){
     const exact = exactCover(boardCells, placementsByPiece);
     if(exact){
       plans.A = {label:'完美覆盖（精确解）', used:exact, empty:[], newPieces:[]};
-      logLines.push('✓ 找到精确覆盖，0 空格完美嵌合！');
+      logLines.push('✅ 找到精确覆盖，0空格！');
     }
   } else {
-    logLines.push('提示：棋盘格数不是 4 的倍数，无法被四连方块完全铺满。');
+    logLines.push('⚠️ 棋盘格数不是4的倍数，不可能被方块完全铺满。');
   }
 
   if(!plans.A){
-    const mc = maxCoverage(boardCells, placementsByPiece);
+    // 方案1：摆放个数优先（怎么放的多怎么摆）
+    const capN = Number.isInteger(T) ? Math.min(T-1, pieces.length) : Math.floor(boardN/4);
+    const mc = maxCoverage(boardCells, placementsByPiece, capN);
     const usedKeys = new Set();
     mc.sol.forEach(u=>u.cells.forEach(([r,c])=>usedKeys.add(cellKey(r,c))));
     const empty = boardCells.filter(([r,c])=>!usedKeys.has(cellKey(r,c)));
-    plans.A = {label:'方案1 · 数量优先', used:mc.sol, empty, newPieces:[]};
+    plans.A = {label:'方案1·数量优先', used:mc.sol, empty, newPieces:[]};
     logLines.push(`方案1(数量优先)：最多放 ${mc.sol.length} 个方块，覆盖 ${mc.sol.length*4} 格，空 ${empty.length} 格。`);
 
-    const mcQ = maxCoverageQuality(boardCells, placementsByPiece);
+    // 方案2：品质优先（紫 > 蓝 > 绿），在满足这个优先级前提下尽量多放
+    const mcQ = maxCoverageQuality(boardCells, placementsByPiece, capN);
     const usedKeysQ = new Set();
     mcQ.sol.forEach(u=>u.cells.forEach(([r,c])=>usedKeysQ.add(cellKey(r,c))));
     const emptyQ = boardCells.filter(([r,c])=>!usedKeysQ.has(cellKey(r,c)));
-    plans.Q = {label:'方案2 · 品质优先', used:mcQ.sol, empty:emptyQ, newPieces:[]};
+    plans.Q = {label:'方案2·品质优先(紫>蓝>绿)', used:mcQ.sol, empty:emptyQ, newPieces:[]};
     const colorCount={};
     mcQ.sol.forEach(u=>{ colorCount[u.piece.color]=(colorCount[u.piece.color]||0)+1; });
-    logLines.push(`方案2(品质优先)：放 ${mcQ.sol.length} 个方块，空 ${emptyQ.length} 格（紫:${colorCount['#bd93f9']||0} 蓝:${colorCount['#3ca0e1']||0} 绿:${colorCount['#46d278']||0}）`);
+    logLines.push(`方案2(品质优先)：放 ${mcQ.sol.length} 个方块，覆盖 ${mcQ.sol.length*4} 格，空 ${emptyQ.length} 格。紫:${colorCount['#bd93f9']||0} 蓝:${colorCount['#3ca0e1']||0} 绿:${colorCount['#46d278']||0}`);
 
     if(Number.isInteger(T)){
       let fixFound=null;
@@ -920,26 +582,26 @@ function runSolve(){
         if(u<0 || u>pieces.length) continue;
         const attempt = useExactlyWithTileCheck(boardCells, placementsByPiece, u, k);
         if(attempt){ fixFound={k, ...attempt}; }
-        logLines.push(`检查补 ${k} 块：${attempt?'✓ 可行':'× 不可行'}`);
+        logLines.push(`检查补 ${k} 块（基于方案1）：${attempt?'✅ 可行':'❌ 不行'}`);
       }
       if(fixFound){
-        plans.B = {label:`方案3 · 补${fixFound.k}块满铺`, used:fixFound.used, empty:[], newPieces:fixFound.newPieces};
+        const usedKeys2=new Set();
+        fixFound.used.forEach(u=>u.cells.forEach(([r,c])=>usedKeys2.add(cellKey(r,c))));
+        plans.B = {label:`方案3·补${fixFound.k}块`, used:fixFound.used, empty:[], newPieces:fixFound.newPieces};
       }
     }
   }
 
-  logLines.push(`计算耗时 ${((Date.now()-t0)/1000).toFixed(2)} 秒`);
+  logLines.push(`用时 ${((Date.now()-t0)/1000).toFixed(1)} 秒`);
   lastResult = plans;
   renderResult(plans);
   logEl.textContent = logLines.join('\n');
 }
 
-/* ---------- 结果渲染 ---------- */
-const NEW_PIECE_COLORS = ['#ffcf40','#ff9f40','#ff6f91','#9bffba'];
 
+/* ---------- 结果渲染 ---------- */
 function renderResult(plans){
-  const sec = document.getElementById('resultSection');
-  sec.classList.remove('hidden');
+  document.getElementById('resultSection').classList.remove('hidden');
   const tabsEl=document.getElementById('planTabs');
   tabsEl.innerHTML='';
   const keys=Object.keys(plans);
@@ -955,19 +617,18 @@ function renderResult(plans){
     tabsEl.appendChild(t);
   });
   drawPlan(plans[keys[0]]);
-  sec.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
 function drawPlan(plan){
-  currentActivePlan = plan;
   const boardResult=document.getElementById('boardResult');
   boardResult.innerHTML='';
   const cellMap={};
   plan.used.forEach(u=>{
     u.cells.forEach(([r,c])=>{ cellMap[cellKey(r,c)]=u.piece; });
   });
+  const newColors=['#ffcf40','#ff9f40','#ff6f91','#9bffba'];
   plan.newPieces.forEach((cells,idx)=>{
-    cells.forEach(([r,c])=>{ cellMap[cellKey(r,c)]={name:'新'+(idx+1), color:NEW_PIECE_COLORS[idx%NEW_PIECE_COLORS.length]}; });
+    cells.forEach(([r,c])=>{ cellMap[cellKey(r,c)]={name:'新'+(idx+1), color:newColors[idx%newColors.length]}; });
   });
   const emptySet=new Set((plan.empty||[]).map(([r,c])=>cellKey(r,c)));
 
@@ -988,29 +649,25 @@ function drawPlan(plan){
   }
 
   const usedCount=plan.used.length, newCount=plan.newPieces.length;
+  const filledCells=usedCount*4+newCount*4;
   const emptyCount=(plan.empty||[]).length;
   document.getElementById('stat').innerHTML=`
-    <div><b>${usedCount}</b>已用方块</div>
-    <div><b>${newCount}</b>需补方块</div>
-    <div><b>${emptyCount}</b>剩余空格</div>
+    <div><b>${usedCount}</b>现有方块</div>
+    <div><b>${newCount}</b>新增方块</div>
+    <div><b>${emptyCount}</b>空格</div>
   `;
 
   const legend=document.getElementById('legend');
-  let html='<h3 style="font-size:12px;color:var(--muted);margin:0 0 8px;font-weight:600;">已上阵方块</h3><div class="legend-grid">';
+  let html='<h3 style="font-size:13px;color:var(--muted);margin:0 0 6px;">使用方块</h3>';
   const seen=new Set();
   plan.used.forEach(u=>{
     if(seen.has(u.piece.id)) return; seen.add(u.piece.id);
     html+=`<div class="row"><span class="swatchS" style="background:${u.piece.color}"></span><span>${u.piece.name}</span></div>`;
   });
-  if(plan.used.length === 0) {
-    html+=`<div style="font-size:12px;color:var(--muted);">无</div>`;
-  }
-  html+='</div>';
-
   if(plan.newPieces.length){
-    html+='<h3 style="font-size:12px;color:var(--muted);margin:12px 0 6px;font-weight:600;">推荐补块形状（需新获取）</h3>';
+    html+='<h3 style="font-size:13px;color:var(--muted);margin:8px 0 6px;">新增形状（储存区没有，需自己创建）</h3>';
     plan.newPieces.forEach((cells,idx)=>{
-      html+=`<div class="row"><span class="swatchS" style="background:${NEW_PIECE_COLORS[idx%NEW_PIECE_COLORS.length]}"></span><span>新${idx+1} — 坐标: ${cells.map(p=>'('+p[0]+','+p[1]+')').join(' ')}</span></div>`;
+      html+=`<div class="row"><span class="swatchS" style="background:${newColors[idx%newColors.length]}"></span><span>新增${idx+1} — 占格: ${cells.map(p=>'('+p[0]+','+p[1]+')').join(' ')}</span></div>`;
     });
   }
   const usedIds=new Set(plan.used.map(u=>u.piece.id));
@@ -1020,265 +677,6 @@ function drawPlan(plan){
   }
   legend.innerHTML=html;
 }
-
-/* ---------- 一键保存结果为高清图片 ---------- */
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-}
-
-document.getElementById('saveImgBtn').onclick = () => {
-  if (!currentActivePlan) {
-    showToast('暂无可保存的求解结果');
-    return;
-  }
-
-  try {
-    const plan = currentActivePlan;
-    const scale = 2; // 2x Retina 高清导出
-    const W = 480;
-
-    // 预计算底部图例高度
-    const usedPieces = plan.used.map(u => u.piece);
-    const usedRows = Math.max(1, Math.ceil(usedPieces.length / 5));
-    const newPieceRows = plan.newPieces.length;
-    const usedIds = new Set(plan.used.map(u => u.piece.id));
-    const unused = pieces.filter(p => !usedIds.has(p.id));
-
-    let extraH = 38 + usedRows * 28;
-    if (newPieceRows > 0) extraH += 34 + newPieceRows * 26;
-    if (unused.length > 0) extraH += 44;
-
-    const H = 610 + extraH;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = W * scale;
-    canvas.height = H * scale;
-    const ctx = canvas.getContext('2d');
-    ctx.scale(scale, scale);
-
-    // 1. 整体浅灰背景
-    ctx.fillStyle = '#F5F5F7';
-    ctx.fillRect(0, 0, W, H);
-
-    // 2. 白色主卡片阴影与主体
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.06)';
-    ctx.shadowBlur = 24;
-    ctx.shadowOffsetY = 6;
-    ctx.fillStyle = '#FFFFFF';
-    roundRect(ctx, 20, 20, W - 40, H - 40, 22);
-    ctx.fill();
-    ctx.restore();
-
-    // 卡片细边框
-    ctx.strokeStyle = '#E5E5EA';
-    ctx.lineWidth = 1;
-    roundRect(ctx, 20, 20, W - 40, H - 40, 22);
-    ctx.stroke();
-
-    // 3. 顶部标题与方案胶囊标签
-    ctx.fillStyle = '#1D1D1F';
-    ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('星象嵌合求解方案', 44, 56);
-
-    ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
-    const badgeText = plan.label;
-    const badgeW = ctx.measureText(badgeText).width + 22;
-    ctx.fillStyle = '#1D1D1F';
-    roundRect(ctx, W - 44 - badgeW, 42, badgeW, 28, 14);
-    ctx.fill();
-    ctx.fillStyle = '#FFFFFF';
-    ctx.textAlign = 'center';
-    ctx.fillText(badgeText, W - 44 - badgeW / 2, 56);
-
-    // 4. 统计数据栏
-    const statY = 86;
-    ctx.fillStyle = '#FAFAFC';
-    roundRect(ctx, 44, statY, W - 88, 66, 14);
-    ctx.fill();
-    ctx.strokeStyle = '#E5E5EA';
-    ctx.stroke();
-
-    const stats = [
-      { num: plan.used.length, label: '已用方块' },
-      { num: plan.newPieces.length, label: '需补方块' },
-      { num: (plan.empty || []).length, label: '剩余空格' }
-    ];
-    stats.forEach((st, idx) => {
-      const cx = 44 + ((W - 88) / 3) * (idx + 0.5);
-      ctx.fillStyle = '#1D1D1F';
-      ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(String(st.num), cx, statY + 26);
-
-      ctx.fillStyle = '#86868B';
-      ctx.font = '500 11px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
-      ctx.fillText(st.label, cx, statY + 48);
-    });
-
-    // 5. 8×8 棋盘绘制
-    const boardY = 168;
-    const boardSize = W - 88; // 392px
-    ctx.fillStyle = '#FAFAFC';
-    roundRect(ctx, 44, boardY, boardSize, boardSize, 16);
-    ctx.fill();
-    ctx.strokeStyle = '#E5E5EA';
-    ctx.stroke();
-
-    const pad = 10;
-    const gap = 5;
-    const cellSize = (boardSize - pad * 2 - gap * 7) / 8;
-
-    const cellMap = {};
-    plan.used.forEach(u => {
-      u.cells.forEach(([r, c]) => { cellMap[cellKey(r, c)] = u.piece; });
-    });
-    plan.newPieces.forEach((cells, idx) => {
-      cells.forEach(([r, c]) => {
-        cellMap[cellKey(r, c)] = { name: '新' + (idx + 1), color: NEW_PIECE_COLORS[idx % NEW_PIECE_COLORS.length] };
-      });
-    });
-    const emptySet = new Set((plan.empty || []).map(([r, c]) => cellKey(r, c)));
-
-    for (let r = 0; r < N; r++) {
-      for (let c = 0; c < N; c++) {
-        const x = 44 + pad + c * (cellSize + gap);
-        const y = boardY + pad + r * (cellSize + gap);
-        const key = cellKey(r, c);
-
-        if (!boardActive[r][c]) {
-          ctx.save();
-          ctx.strokeStyle = '#E2E2E8';
-          ctx.setLineDash([3, 3]);
-          roundRect(ctx, x, y, cellSize, cellSize, 7);
-          ctx.stroke();
-          ctx.restore();
-        } else if (cellMap[key]) {
-          ctx.fillStyle = cellMap[key].color;
-          roundRect(ctx, x, y, cellSize, cellSize, 7);
-          ctx.fill();
-          ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-          ctx.stroke();
-
-          ctx.fillStyle = '#1D1D1F';
-          ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(cellMap[key].name, x + cellSize / 2, y + cellSize / 2);
-        } else if (emptySet.has(key)) {
-          ctx.fillStyle = '#FFF0EF';
-          roundRect(ctx, x, y, cellSize, cellSize, 7);
-          ctx.fill();
-          ctx.strokeStyle = '#FFC7C4';
-          ctx.stroke();
-
-          ctx.fillStyle = '#FF3B30';
-          ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('×', x + cellSize / 2, y + cellSize / 2);
-        } else {
-          ctx.fillStyle = '#F2F2F7';
-          roundRect(ctx, x, y, cellSize, cellSize, 7);
-          ctx.fill();
-          ctx.strokeStyle = '#D1D1D6';
-          ctx.stroke();
-        }
-      }
-    }
-
-    // 6. 底部方块清单与补块说明
-    let curY = boardY + boardSize + 24;
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#86868B';
-    ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
-    ctx.fillText('已上阵方块', 44, curY);
-    curY += 18;
-
-    if (usedPieces.length === 0) {
-      ctx.fillStyle = '#86868B';
-      ctx.font = '400 12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
-      ctx.fillText('无', 44, curY + 6);
-      curY += 28;
-    } else {
-      usedPieces.forEach((p, idx) => {
-        const col = idx % 5;
-        const row = Math.floor(idx / 5);
-        const px = 44 + col * 78;
-        const py = curY + row * 28;
-
-        ctx.fillStyle = p.color;
-        roundRect(ctx, px, py, 14, 14, 4);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-        ctx.stroke();
-
-        ctx.fillStyle = '#1D1D1F';
-        ctx.font = '500 12px -apple-system, BlinkMacSystemFont, sans-serif';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(p.name, px + 20, py + 7);
-      });
-      curY += usedRows * 28;
-    }
-
-    if (plan.newPieces.length > 0) {
-      curY += 10;
-      ctx.fillStyle = '#86868B';
-      ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
-      ctx.fillText('推荐补块形状（需新获取）', 44, curY);
-      curY += 18;
-
-      plan.newPieces.forEach((cells, idx) => {
-        const py = curY + idx * 26;
-        ctx.fillStyle = NEW_PIECE_COLORS[idx % NEW_PIECE_COLORS.length];
-        roundRect(ctx, 44, py, 14, 14, 4);
-        ctx.fill();
-
-        ctx.fillStyle = '#1D1D1F';
-        ctx.font = '500 12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
-        const coordText = `新${idx + 1} — 坐标: ${cells.map(p => '(' + p[0] + ',' + p[1] + ')').join(' ')}`;
-        ctx.fillText(coordText, 64, py + 7);
-      });
-      curY += plan.newPieces.length * 26;
-    }
-
-    if (unused.length > 0) {
-      curY += 14;
-      ctx.fillStyle = '#86868B';
-      ctx.font = '400 12px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
-      const unusedStr = '闲置未用：' + unused.map(p => p.name).join('、');
-      ctx.fillText(unusedStr.length > 34 ? unusedStr.slice(0, 34) + '...' : unusedStr, 44, curY);
-    }
-
-    // 底部时间水印
-    ctx.fillStyle = '#C7C7CC';
-    ctx.font = '400 11px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
-    ctx.textAlign = 'center';
-    const nowStr = new Date().toLocaleString('zh-CN', { hour12: false });
-    ctx.fillText(`由 星象嵌合求解器 生成 · ${nowStr}`, W / 2, H - 34);
-
-    // 触发浏览器下载
-    const dataUrl = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.download = `星象嵌合方案_${plan.label.replace(/\s+/g, '')}.png`;
-    link.href = dataUrl;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    showToast('已生成高清结果图并开始下载');
-  } catch (err) {
-    console.error(err);
-    showToast('生成图片失败，请重试');
-  }
-};
 </script>
 </body>
 </html>
