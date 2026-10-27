@@ -113,6 +113,8 @@ button.small{padding:5px 9px;font-size:12px;}
     <div class="stat" id="stat"></div>
     <div class="board8" id="boardResult"></div>
     <div class="legend" id="legend" style="margin-top:10px;"></div>
+    <button class="primary" id="saveImgBtn" style="width:100%;margin-top:12px;padding:11px;">💾 一键保存全部方案图片</button>
+    <div id="saveMsg" class="note"></div>
   </section>
 </div>
 
@@ -247,6 +249,19 @@ clearAllBtn.onclick=()=>{
 };
 
 /* ---------- 求解算法 ---------- */
+/* ---------- 主求解流程（放在后台线程里算，页面不卡、可以正常滑动） ---------- */
+function cellKey(r,c){return r+','+c;}
+let lastResult = null;
+let solverWorker = null;
+let solving = false;
+let currentTabIdx = 0;
+const solveBtn = document.getElementById('solveBtn');
+const logEl = document.getElementById('log');
+
+function workerBody(scope){
+  const N = 8;
+  let pieces = [];
+  let boardActive = [];
 function cellKey(r,c){return r+','+c;}
 
 function getBoardCells(){
@@ -518,105 +533,246 @@ function useExactlyWithTileCheck(boardCells, placementsByPiece, u, k){
   return r;
 }
 
-/* ---------- 主求解流程 ---------- */
-let lastResult = null;
 
-document.getElementById('solveBtn').onclick = ()=>{
-  const logEl=document.getElementById('log');
-  logEl.textContent='求解中...';
-  setTimeout(runSolve, 30);
-};
+  function solveAll(post){
+    const boardCells = getBoardCells();
+    const boardN = boardCells.length;
+    const boardSet = new Set(boardCells.map(([r,c])=>cellKey(r,c)));
+    const placementsByPiece={};
+    pieces.forEach(p=>{ placementsByPiece[p.id]=getPlacements(p, boardSet); });
 
-function runSolve(){
-  const logEl=document.getElementById('log');
-  const boardCells = getBoardCells();
-  const boardN = boardCells.length;
-  if(boardN===0){ logEl.textContent='棋盘是空的，先点格子启用棋盘。'; return; }
-  if(pieces.length===0){ logEl.textContent='还没有任何方块，先在②画几个形状。'; return; }
-
-  const boardSet = new Set(boardCells.map(([r,c])=>cellKey(r,c)));
-  const placementsByPiece={};
-  pieces.forEach(p=>{ placementsByPiece[p.id]=getPlacements(p, boardSet); });
-
-  let logLines=[];
-  logLines.push(`棋盘格数: ${boardN} ｜ 方块数: ${pieces.length}`);
-  const t0 = Date.now();
-
-  const T = boardN/4;
-  let plans = {};
-
-  if(Number.isInteger(T)){
-    const exact = exactCover(boardCells, placementsByPiece);
-    if(exact){
-      plans.A = {label:'完美覆盖（精确解）', used:exact, empty:[], newPieces:[]};
-      logLines.push('✅ 找到精确覆盖，0空格！');
-    }
-  } else {
-    logLines.push('⚠️ 棋盘格数不是4的倍数，不可能被方块完全铺满。');
-  }
-
-  if(!plans.A){
-    // 方案1：摆放个数优先（怎么放的多怎么摆）
-    const capN = Number.isInteger(T) ? Math.min(T-1, pieces.length) : Math.floor(boardN/4);
-    const mc = maxCoverage(boardCells, placementsByPiece, capN);
-    const usedKeys = new Set();
-    mc.sol.forEach(u=>u.cells.forEach(([r,c])=>usedKeys.add(cellKey(r,c))));
-    const empty = boardCells.filter(([r,c])=>!usedKeys.has(cellKey(r,c)));
-    plans.A = {label:'方案1·数量优先', used:mc.sol, empty, newPieces:[]};
-    logLines.push(`方案1(数量优先)：最多放 ${mc.sol.length} 个方块，覆盖 ${mc.sol.length*4} 格，空 ${empty.length} 格。`);
-
-    // 方案2：品质优先（紫 > 蓝 > 绿），在满足这个优先级前提下尽量多放
-    const mcQ = maxCoverageQuality(boardCells, placementsByPiece, capN);
-    const usedKeysQ = new Set();
-    mcQ.sol.forEach(u=>u.cells.forEach(([r,c])=>usedKeysQ.add(cellKey(r,c))));
-    const emptyQ = boardCells.filter(([r,c])=>!usedKeysQ.has(cellKey(r,c)));
-    plans.Q = {label:'方案2·品质优先(紫>蓝>绿)', used:mcQ.sol, empty:emptyQ, newPieces:[]};
-    const colorCount={};
-    mcQ.sol.forEach(u=>{ colorCount[u.piece.color]=(colorCount[u.piece.color]||0)+1; });
-    logLines.push(`方案2(品质优先)：放 ${mcQ.sol.length} 个方块，覆盖 ${mcQ.sol.length*4} 格，空 ${emptyQ.length} 格。紫:${colorCount['#bd93f9']||0} 蓝:${colorCount['#3ca0e1']||0} 绿:${colorCount['#46d278']||0}`);
+    let logLines=[];
+    logLines.push(`棋盘格数: ${boardN} ｜ 方块数: ${pieces.length}`);
+    const t0 = Date.now();
+    const T = boardN/4;
+    let plans = {};
 
     if(Number.isInteger(T)){
-      let fixFound=null;
-      for(let k=1; k<=4 && !fixFound; k++){
-        const u = T-k;
-        if(u<0 || u>pieces.length) continue;
-        const attempt = useExactlyWithTileCheck(boardCells, placementsByPiece, u, k);
-        if(attempt){ fixFound={k, ...attempt}; }
-        logLines.push(`检查补 ${k} 块（基于方案1）：${attempt?'✅ 可行':'❌ 不行'}`);
+      post({type:'log', lines:logLines.concat(['⏳ 正在检查能否精确铺满…'])});
+      const exact = exactCover(boardCells, placementsByPiece);
+      if(exact){
+        plans.A = {label:'完美覆盖（精确解）', used:exact, empty:[], newPieces:[]};
+        logLines.push('✅ 找到精确覆盖，0空格！');
       }
-      if(fixFound){
-        const usedKeys2=new Set();
-        fixFound.used.forEach(u=>u.cells.forEach(([r,c])=>usedKeys2.add(cellKey(r,c))));
-        plans.B = {label:`方案3·补${fixFound.k}块`, used:fixFound.used, empty:[], newPieces:fixFound.newPieces};
+    } else {
+      logLines.push('⚠️ 棋盘格数不是4的倍数，不可能被方块完全铺满。');
+    }
+
+    if(!plans.A){
+      post({type:'log', lines:logLines.concat(['⏳ 正在计算方案1（数量优先）…'])});
+      const capN = Number.isInteger(T) ? Math.min(T-1, pieces.length) : Math.floor(boardN/4);
+      const mc = maxCoverage(boardCells, placementsByPiece, capN);
+      const usedKeys = new Set();
+      mc.sol.forEach(u=>u.cells.forEach(([r,c])=>usedKeys.add(cellKey(r,c))));
+      const empty = boardCells.filter(([r,c])=>!usedKeys.has(cellKey(r,c)));
+      plans.A = {label:'方案1·数量优先', used:mc.sol, empty, newPieces:[]};
+      logLines.push(`方案1(数量优先)：最多放 ${mc.sol.length} 个方块，覆盖 ${mc.sol.length*4} 格，空 ${empty.length} 格。`);
+
+      post({type:'log', lines:logLines.concat(['⏳ 正在计算方案2（品质优先）…'])});
+      const mcQ = maxCoverageQuality(boardCells, placementsByPiece, capN);
+      const usedKeysQ = new Set();
+      mcQ.sol.forEach(u=>u.cells.forEach(([r,c])=>usedKeysQ.add(cellKey(r,c))));
+      const emptyQ = boardCells.filter(([r,c])=>!usedKeysQ.has(cellKey(r,c)));
+      plans.Q = {label:'方案2·品质优先(紫>蓝>绿)', used:mcQ.sol, empty:emptyQ, newPieces:[]};
+      const colorCount={};
+      mcQ.sol.forEach(u=>{ colorCount[u.piece.color]=(colorCount[u.piece.color]||0)+1; });
+      logLines.push(`方案2(品质优先)：放 ${mcQ.sol.length} 个方块，覆盖 ${mcQ.sol.length*4} 格，空 ${emptyQ.length} 格。紫:${colorCount['#bd93f9']||0} 蓝:${colorCount['#3ca0e1']||0} 绿:${colorCount['#46d278']||0}`);
+
+      // 方案1、2先显示出来，补块在后台继续算
+      post({type:'partial', plans, logLines:logLines.slice()});
+
+      if(Number.isInteger(T)){
+        let fixFound=null;
+        for(let k=1; k<=4 && !fixFound; k++){
+          const u = T-k;
+          if(u<0 || u>pieces.length) continue;
+          post({type:'log', lines:logLines.concat([`⏳ 方案1、2已可查看；正在后台检查补 ${k} 块…`]), keepResult:true});
+          const attempt = useExactlyWithTileCheck(boardCells, placementsByPiece, u, k);
+          if(attempt){ fixFound={k, ...attempt}; }
+          logLines.push(`检查补 ${k} 块（基于方案1）：${attempt?'✅ 可行':'❌ 不行'}`);
+        }
+        if(fixFound){
+          plans.B = {label:`方案3·补${fixFound.k}块`, used:fixFound.used, empty:[], newPieces:fixFound.newPieces};
+        }
       }
     }
+    logLines.push(`用时 ${((Date.now()-t0)/1000).toFixed(1)} 秒`);
+    post({type:'done', plans, logLines});
   }
-
-  logLines.push(`用时 ${((Date.now()-t0)/1000).toFixed(1)} 秒`);
-  lastResult = plans;
-  renderResult(plans);
-  logEl.textContent = logLines.join('\n');
+  scope.onmessage = (e)=>{
+    pieces = e.data.pieces; boardActive = e.data.boardActive;
+    solveAll((m)=>scope.postMessage(m));
+  };
 }
 
+function finishSolve(){
+  solving=false;
+  solveBtn.textContent='🧩 开始求解';
+}
+function onSolverMessage(m){
+  if(m.type==='log'){ logEl.textContent=m.lines.join('\n'); return; }
+  if(m.type==='partial' || m.type==='done'){
+    lastResult = m.plans;
+    renderResult(m.plans, currentTabIdx);
+    logEl.textContent = m.logLines.join('\n') + (m.type==='partial' ? '\n⏳ 方案1、2已出；补块方案还在后台计算，可以先看，也可以点“停止计算”。' : '');
+    if(m.type==='done'){
+      finishSolve();
+      if(solverWorker){ solverWorker.terminate(); solverWorker=null; }
+    }
+  }
+}
+function runOnMainThread(payload){
+  // 后台线程不可用时的兜底：在页面内直接计算（计算期间页面会短暂卡住）
+  const scope = { postMessage:(m)=>onSolverMessage(m) };
+  workerBody(scope);
+  setTimeout(()=>scope.onmessage({data:payload}), 30);
+}
+
+solveBtn.onclick = ()=>{
+  if(solving){
+    if(solverWorker){ solverWorker.terminate(); solverWorker=null; }
+    finishSolve();
+    logEl.textContent += '\n⏹ 已停止计算（已经显示的方案仍然可用）';
+    return;
+  }
+  const anyCell = boardActive.some(row=>row.some(Boolean));
+  if(!anyCell){ logEl.textContent='棋盘是空的，先点格子启用棋盘。'; return; }
+  if(pieces.length===0){ logEl.textContent='还没有任何方块，先在②画几个形状。'; return; }
+
+  solving=true; currentTabIdx=0;
+  solveBtn.textContent='⏹ 停止计算';
+  logEl.textContent='求解中…（后台计算，页面可以正常滑动）';
+  const payload = { pieces: JSON.parse(JSON.stringify(pieces)), boardActive: boardActive.map(r=>r.slice()) };
+  let gotMessage=false, fellBack=false;
+  const fallback = (why)=>{
+    if(fellBack) return; fellBack=true;
+    if(solverWorker){ try{solverWorker.terminate();}catch(e){} solverWorker=null; }
+    logEl.textContent='后台线程不可用（'+why+'），改为页面内计算，计算期间页面会短暂卡住…';
+    runOnMainThread(payload);
+  };
+  try{
+    const src = '(' + workerBody.toString() + ')(self)';
+    const url = URL.createObjectURL(new Blob([src], {type:'text/javascript'}));
+    solverWorker = new Worker(url);
+    solverWorker.onmessage = (e)=>{ gotMessage=true; onSolverMessage(e.data); };
+    solverWorker.onerror = (err)=>{ if(!gotMessage) fallback('线程启动失败'); };
+    solverWorker.postMessage(payload);
+    setTimeout(()=>{ if(!gotMessage && solving && !fellBack) fallback('线程无响应'); }, 4000);
+  }catch(err){
+    fallback('创建失败');
+  }
+};
+
+
+/* ---------- 一键保存图片（所有方案合成一张长图，带英文署名） ---------- */
+const CREDIT_TEXT = 'Provided by DaZuiYu';
+let downloadsCap = null;
+if (window.claude && window.claude.use) {
+  window.claude.use('downloads').then(d=>{ downloadsCap = d; }).catch(()=>{});
+}
+function wrapText(ctx, text, maxW){
+  const out=[]; let line='';
+  for(const ch of text){
+    const t=line+ch;
+    if(ctx.measureText(t).width>maxW && line){ out.push(line); line=ch; } else line=t;
+  }
+  if(line) out.push(line);
+  return out;
+}
+function buildPlansCanvas(plans){
+  const keys = Object.keys(plans);
+  const W=660, pad=24, cell=76, gap=4, boardW=cell*8, boardX=(W-boardW)/2;
+  const NEW_COLORS=['#ffcf40','#ff9f40','#ff6f91','#9bffba'];
+  const tmp=document.createElement('canvas').getContext('2d');
+  tmp.font='15px sans-serif';
+  const blocks = keys.map(k=>{
+    const plan=plans[k];
+    const usedIds=[]; plan.used.forEach(u=>{ if(!usedIds.includes(u.piece.id)) usedIds.push(u.piece.id); });
+    const nameOf=id=>plan.used.find(u=>u.piece.id===id).piece.name;
+    const unused=pieces.filter(p=>!usedIds.includes(p.id)).map(p=>p.name);
+    const info=[`放置 ${plan.used.length} 块`+(plan.newPieces.length?` + 新增 ${plan.newPieces.length} 块（黄/橙色“新”）`:'')+` · 空 ${(plan.empty||[]).length} 格`];
+    info.push(...wrapText(tmp,'使用：'+usedIds.map(nameOf).join(' '),W-2*pad));
+    if(unused.length) info.push(...wrapText(tmp,'闲置：'+unused.join(' '),W-2*pad));
+    const h = 46 + cell*8 + 14 + info.length*22 + 26;
+    return {plan, info, h};
+  });
+  const headH=84, footH=56;
+  const H = headH + blocks.reduce((a,b)=>a+b.h,0) + footH;
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#0d0d14'; ctx.fillRect(0,0,W,H);
+  ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+  ctx.fillStyle='#e8e8f0'; ctx.font='bold 28px sans-serif';
+  ctx.fillText('星象嵌合 · 方案汇总', W/2, 40);
+  ctx.fillStyle='#9098ae'; ctx.font='15px sans-serif';
+  ctx.fillText(CREDIT_TEXT, W/2, 66);
+  let y=headH;
+  blocks.forEach(({plan,info,h})=>{
+    ctx.fillStyle='#7ad2ff'; ctx.font='bold 20px sans-serif'; ctx.textAlign='left';
+    ctx.fillText(plan.label, pad, y+28);
+    const cm={};
+    plan.used.forEach(u=>u.cells.forEach(([r,c])=>{ cm[cellKey(r,c)]={name:u.piece.name,color:u.piece.color}; }));
+    plan.newPieces.forEach((cells,i)=>cells.forEach(([r,c])=>{ cm[cellKey(r,c)]={name:'新',color:NEW_COLORS[i%NEW_COLORS.length]}; }));
+    const emptySet=new Set((plan.empty||[]).map(([r,c])=>cellKey(r,c)));
+    const top=y+46;
+    for(let r=0;r<N;r++) for(let c=0;c<N;c++){
+      if(!boardActive[r][c]) continue;
+      const x=boardX+c*cell, yy=top+r*cell, sz=cell-gap;
+      const key=cellKey(r,c);
+      if(cm[key]){ ctx.fillStyle=cm[key].color; ctx.fillRect(x,yy,sz,sz);
+        ctx.fillStyle='#1a1a1a'; ctx.font='bold 15px sans-serif'; ctx.textAlign='center';
+        ctx.fillText(cm[key].name, x+sz/2, yy+sz/2+5);
+      } else if(emptySet.has(key)){ ctx.fillStyle='#e63c3c'; ctx.fillRect(x,yy,sz,sz);
+        ctx.fillStyle='#fff'; ctx.font='bold 22px sans-serif'; ctx.textAlign='center';
+        ctx.fillText('×', x+sz/2, yy+sz/2+8);
+      } else { ctx.fillStyle='#1a2a4e'; ctx.fillRect(x,yy,sz,sz); }
+    }
+    ctx.textAlign='left'; ctx.font='15px sans-serif'; ctx.fillStyle='#c8c8d8';
+    info.forEach((t,i)=>ctx.fillText(t, pad, top+cell*8+24+i*22));
+    y+=h;
+  });
+  ctx.textAlign='center'; ctx.fillStyle='#9098ae'; ctx.font='15px sans-serif';
+  ctx.fillText(CREDIT_TEXT, W/2, H-22);
+  return cv;
+}
+async function saveAllPlansImage(){
+  const msgEl=document.getElementById('saveMsg');
+  if(!lastResult || !Object.keys(lastResult).length){ msgEl.textContent='还没有求解结果。'; return; }
+  let cv;
+  try{ cv=buildPlansCanvas(lastResult); }catch(e){ msgEl.textContent='生成图片失败：'+e.message; return; }
+  const blob = await new Promise(res=>cv.toBlob(res,'image/png'));
+  if(!blob){ msgEl.textContent='生成图片失败。'; return; }
+  if(!downloadsCap && window.claude && window.claude.use){ try{ downloadsCap = await window.claude.use('downloads'); }catch(e){} }
+  if(!downloadsCap){ msgEl.textContent='当前环境不支持直接保存，请长按/截图保存。'; return; }
+  try{
+    await downloadsCap.save({ filename:'star-puzzle-plans.png', data:blob });
+    msgEl.textContent = '✅ 已提交保存'+(solving?'（补块方案还在计算，图片只包含当前已有的方案）':'');
+  }catch(err){
+    msgEl.textContent = (err && err.code==='declined') ? '已取消保存。' : '保存失败：'+((err&&err.message)||'未知错误');
+  }
+}
+document.getElementById('saveImgBtn').addEventListener('click', saveAllPlansImage);
 
 /* ---------- 结果渲染 ---------- */
-function renderResult(plans){
+function renderResult(plans, keepIdx){
   document.getElementById('resultSection').classList.remove('hidden');
   const tabsEl=document.getElementById('planTabs');
   tabsEl.innerHTML='';
   const keys=Object.keys(plans);
+  const active = (keepIdx!=null && keepIdx<keys.length) ? keepIdx : 0;
   keys.forEach((k,i)=>{
     const t=document.createElement('div');
-    t.className='tab'+(i===0?' active':'');
+    t.className='tab'+(i===active?' active':'');
     t.textContent=plans[k].label;
     t.onclick=()=>{
+      currentTabIdx=i;
       [...tabsEl.children].forEach(x=>x.classList.remove('active'));
       t.classList.add('active');
       drawPlan(plans[k]);
     };
     tabsEl.appendChild(t);
   });
-  drawPlan(plans[keys[0]]);
+  drawPlan(plans[keys[active]]);
 }
 
 function drawPlan(plan){
